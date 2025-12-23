@@ -18,7 +18,6 @@ const LikeSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// 🔒 zabezpieczenie przed wielokrotnym lajkiem
 LikeSchema.index(
   { postId: 1, userId: 1 },
   { unique: true }
