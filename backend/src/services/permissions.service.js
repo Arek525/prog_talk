@@ -1,0 +1,42 @@
+const TopicModerator = require('../models/TopicModerator.model');
+const TopicBlock = require('../models/TopicBlock.model');
+const {getParentChain} = require('./topicTree.service');
+
+// is a moderator if still is one on any higher topic
+async function isModerator(userId, topicId){
+    const chain = await getParentChain(topicId);
+
+    const mod = await TopicModerator.findOne({
+        userId,
+        topicId: {$in: chain}
+    });
+
+    return Boolean(mod);
+}
+
+// is blocked if still is blocked on any higher topic
+async function isUserBlocked(userId, topicId) {
+  const chain = await getParentChain(topicId);
+
+  for (let i = 0; i < chain.length; i++) {
+    const blockedAt = chain[i];
+    const block = await TopicBlock.findOne({
+      userId,
+      topicId: blockedAt,
+    });
+
+    if (!block) continue;
+
+    const child = chain[i - 1]; //checking if our subtopic is on the exception branch
+    if (child && block.exceptions.includes(child)) continue;
+
+    return true;
+  }
+
+  return false;
+}
+
+module.exports = {
+  isModerator,
+  isUserBlocked,
+};
