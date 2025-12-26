@@ -26,5 +26,10 @@
     "mongodb-memory-server": "^11.0.1",
     "nodemon": "^3.1.11",
     "supertest": "^7.1.4"
+  },
+  "jest": {
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setup.js"
+    ]
   }
 }
