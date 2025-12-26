@@ -38,6 +38,15 @@ async function login(req, res){
                 role: user.role
             }
         });
+
+        res.json({
+            message: 'Login successful',
+            user: {
+                id: user._id,
+                email: user.email,
+                role: user.role,
+            },
+        });
     } catch(err){
         res.status(403).json({error: err.message})
     }
