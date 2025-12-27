@@ -31,12 +31,10 @@ async function login(req, res){
         const {user, token} = result;
 
         res.cookie('access_token', token, {
-            message: 'Login successful',
-            user: {
-                id: user._id,
-                email: user.email,
-                role: user.role
-            }
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 60 * 60 * 1000,
         });
 
         res.json({
