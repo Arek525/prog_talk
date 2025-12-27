@@ -1,5 +1,6 @@
 const TopicModerator = require('../models/TopicModerator.model');
 const TopicBlock = require('../models/TopicBlock.model');
+const Topic = require('../models/Topic.model');
 const {getParentChain} = require('./topicTree.service');
 
 // is a moderator if still is one on any higher topic
@@ -43,6 +44,17 @@ async function isUserBlocked(userId, topicId) {
   }
 
   return false;
+}
+
+async function isTopicFounderInBranch(userId, topicId){
+  const chain = await getParentChain(topicId);
+
+  const topics = await Topic.find({
+    _id: {$in: chain},
+    createdBy: userId
+  })
+
+  return topics.length > 0;
 }
 
 module.exports = {
