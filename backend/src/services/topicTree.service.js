@@ -1,6 +1,6 @@
 const Topic = require('../models/Topic.model');
 
-async function getParenChain(topicId){
+async function getParentChain(topicId){
     const chain = [];
     let current = await Topic.findById(topicId);
 
@@ -30,6 +30,6 @@ async function getSubtreeTopicIds(topicId){
 }
 
 module.exports = {
-    getParenChain,
+    getParentChain,
     getSubtreeTopicIds
 };
