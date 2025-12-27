@@ -60,4 +60,5 @@ async function isTopicFounderInBranch(userId, topicId){
 module.exports = {
   isModerator,
   isUserBlocked,
+  isTopicFounderInBranch
 };
