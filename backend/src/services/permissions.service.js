@@ -3,16 +3,25 @@ const TopicBlock = require('../models/TopicBlock.model');
 const {getParentChain} = require('./topicTree.service');
 
 // is a moderator if still is one on any higher topic
-async function isModerator(userId, topicId){
-    const chain = await getParentChain(topicId);
+async function isModerator(userId, topicId) {
+  const chain = await getParentChain(topicId);
+
+  for (let i = 0; i < chain.length; i++) {
+    const current = chain[i];
 
     const mod = await TopicModerator.findOne({
-        userId,
-        topicId: {$in: chain}
+      userId,
+      topicId: current,
     });
 
-    return Boolean(mod);
+    if (!mod) continue;
+
+    return true;
+  }
+
+  return false;
 }
+
 
 // is blocked if still is blocked on any higher topic
 async function isUserBlocked(userId, topicId) {
