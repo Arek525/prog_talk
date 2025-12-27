@@ -25,7 +25,7 @@ async function login({email, password}){
     if(!user) return null;
 
     if(user.status !== 'ACTIVE'){
-        throw new Error('Accoutn not active');
+        throw new Error('Account not active');
     }
 
     const valid = user.validatePassword(password);
