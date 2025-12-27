@@ -49,12 +49,10 @@ async function isUserBlocked(userId, topicId) {
 async function isTopicFounderInBranch(userId, topicId){
   const chain = await getParentChain(topicId);
 
-  const topics = await Topic.find({
+  return await Topic.exists({
     _id: {$in: chain},
     createdBy: userId
-  })
-
-  return topics.length > 0;
+  });
 }
 
 module.exports = {
