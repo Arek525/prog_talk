@@ -10,8 +10,10 @@ app.use(passport.initialize());
 
 const authRoutes = require('./routes/auth.routes');
 const topicRoutes = require('./routes/topic.routes');
+const moderatorRoutes = require('./routes/moderator.routes');
 
 app.use('/auth', authRoutes);
-app.use('/topics', topicRoutes)
+app.use('/topics', topicRoutes);
+app.use('/', moderatorRoutes);
 
 module.exports = app;
