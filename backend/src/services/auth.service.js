@@ -24,10 +24,14 @@ async function login({email, password}){
 
     if(!user) return null;
 
-    if(user.status !== 'ACTIVE'){
-        throw new Error('Account not active');
+    if (user.status === 'BANNED') {
+        throw new Error('User is banned');
     }
 
+    else if(user.status === 'PENDING'){
+        throw new Error('User is pending')
+    }
+    
     const valid = user.validatePassword(password);
     if(!valid) return null;
 

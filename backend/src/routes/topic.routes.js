@@ -8,8 +8,8 @@ router.post('/', requireAuth, topicController.createRootTopic);
 router.post('/:id/subtopics', requireAuth, topicController.createSubtopic);
 router.patch('/:id', requireAuth, topicController.updateTopic);
 
-router.get('/', topicController.getRootTopics);
-router.get('/:id', topicController.getTopic);
-router.get('/:id/tree', topicController.getTopicTree);
+router.get('/', requireAuth, topicController.getRootTopics);
+router.get('/:id', requireAuth, topicController.getTopic);
+router.get('/:id/tree', requireAuth, topicController.getTopicTree);
 
 module.exports = router;

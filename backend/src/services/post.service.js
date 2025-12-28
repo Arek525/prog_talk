@@ -4,6 +4,13 @@ const Topic = require('../models/Topic.model');
 const {isUserBlocked} = require('./permissions.service');
 
 async function createPost(userId, topicId, data){
+    const topic = await Topic.findById(topicId); 
+    if (!topic) throw new Error('Topic not found');
+
+    if (topic.isClosed) {
+        throw new Error('Topic is closed');
+    }
+
     if(await isUserBlocked(userId, topicId)){
         throw new Error('User is blocked in this topic');
     }

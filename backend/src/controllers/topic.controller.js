@@ -28,7 +28,7 @@ async function createSubtopic(req, res){
 async function updateTopic(req, res){
     try{
         const topic = await topicService.updateTopic(
-            req.user_id,
+            req.user._id,
             req.params.id,
             req.body
         );
@@ -39,18 +39,18 @@ async function updateTopic(req, res){
 }
 
 async function getRootTopics(req, res){
-    const topics = await topicService.getRootTopics();
+    const topics = await topicService.getRootTopics(req.user);
     res.json(topics);
 }
 
 async function getTopic(req, res){
-    const topic = await topicService.getTopic(req.params.id);
+    const topic = await topicService.getTopic(req.user, req.params.id);
     if(!topic) return res.status(404).json({error: 'Not found'});
     res.json(topic);
 }
 
 async function getTopicTree(req, res){
-    const tree = await topicService.getTopicTree(req.params.id);
+    const tree = await topicService.getTopicTree(req.user, req.params.id);
     res.json(tree)
 }
 

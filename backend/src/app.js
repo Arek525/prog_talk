@@ -12,10 +12,14 @@ const authRoutes = require('./routes/auth.routes');
 const topicRoutes = require('./routes/topic.routes');
 const moderatorRoutes = require('./routes/moderator.routes');
 const postRoutes = require('./routes/post.routes');
+const adminRoutes = require('./routes/admin.routes');
+const userRoutes = require('./routes/user.routes');
 
 app.use('/auth', authRoutes);
 app.use('/topics', topicRoutes);
 app.use('/', moderatorRoutes);
 app.use('/', postRoutes);
+app.use('/admin', adminRoutes);
+app.use('/users', userRoutes);
 
 module.exports = app;
