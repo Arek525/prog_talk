@@ -83,7 +83,10 @@ describe('Topic API', () => {
       .set('Cookie', cookie)
       .send({ title: 'Vue' });
 
-    const res = await request.get(`/topics/${root.body._id}/tree`);
+  const res = await request
+    .get(`/topics/${root.body._id}/tree`)
+    .set('Cookie', cookie);
+
     expect(res.body.length).toBe(1);
   });
 });
