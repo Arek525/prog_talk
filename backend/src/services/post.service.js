@@ -2,6 +2,7 @@ const Post = require('../models/Post.model');
 const Like = require('../models/Like.model');
 const Topic = require('../models/Topic.model');
 const {isUserBlocked} = require('./permissions.service');
+const { getIO } = require('../socket/io');
 
 async function createPost(userId, topicId, data){
     const topic = await Topic.findById(topicId); 
@@ -74,6 +75,14 @@ async function deletePost(userId, postId){
 
     post.deletedAt = new Date();
     await post.save();
+
+    const io = getIO;
+    if(io){
+        io.to(String(post.topicId)).emit('post:deleted', {
+            postId: post._id,
+            topicId: post.topicId
+        });
+    }
 }
 
 async function likePost(userId, postId){
