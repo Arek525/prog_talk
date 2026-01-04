@@ -13,6 +13,6 @@ function requireModerator(param = 'topicId'){
     }
 }
 
-modeule.exports = {
+module.exports = {
     requireModerator
 };
