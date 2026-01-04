@@ -24,6 +24,11 @@ async function createPost(userId, topicId, data){
         references: data.references || [],
     })
 
+    const io = getIO();
+    if(io){
+        io.to(String(topicId)).emit('post:created', post);
+    }
+
     return post;
 }
 
@@ -76,7 +81,7 @@ async function deletePost(userId, postId){
     post.deletedAt = new Date();
     await post.save();
 
-    const io = getIO;
+    const io = getIO();
     if(io){
         io.to(String(post.topicId)).emit('post:deleted', {
             postId: post._id,
