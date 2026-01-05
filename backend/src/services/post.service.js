@@ -91,14 +91,24 @@ async function deletePost(userId, postId){
 }
 
 async function likePost(userId, postId){
+    let like;
     try{
-        await Like.create({
+        like = await Like.create({
             postId,
             userId
         });
     } catch(err){
         throw new Error('Already liked');
     }
+
+    const post = await Post.findById(postId);
+    if(!post) return;
+
+    const io = getIO();
+    io.to(String(post.topicId)).emit('post:liked', {
+        postId,
+        userId
+    })
 }
 
 async function unlikePost(userId, postId){
@@ -106,6 +116,17 @@ async function unlikePost(userId, postId){
         postId,
         userId
     });
+
+    const post = await Post.findById(postId);
+    if(!post) return;
+
+    const io = getIO();
+    if(io){
+        io.to(String(post.topicId)).emit('post:unliked', {
+            postId,
+            userId
+        });
+    }
 }
 
 module.exports = {
