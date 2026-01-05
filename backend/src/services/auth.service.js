@@ -16,6 +16,14 @@ async function register({email, password, country}){
     user.setPassword(password);
     await user.save();
 
+    const io = getIO();
+    if(io){
+        io.to('admins').emit('user:pending', {
+            userId: user._id,
+            email: user.email
+        })
+    }
+
     return user;
 }
 

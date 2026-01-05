@@ -91,9 +91,8 @@ async function deletePost(userId, postId){
 }
 
 async function likePost(userId, postId){
-    let like;
     try{
-        like = await Like.create({
+        await Like.create({
             postId,
             userId
         });

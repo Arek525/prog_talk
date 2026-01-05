@@ -18,6 +18,15 @@ async function approveUser(req, res) {
     }
 }
 
+async function rejectUser(req, res){
+    try{
+        await adminService.rejectUser(req.params.id);
+        res.json({ message: 'User rejected' });
+    } catch(err){
+        res.status(400).json({error: err.message});
+    }
+}
+
 async function banUser(req, res) {
     try {
         await adminService.banUser(req.params.id);

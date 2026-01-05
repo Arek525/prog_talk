@@ -8,6 +8,7 @@ router.use(requireAuth, requireAdmin);
 
 router.get('/users/pending', adminController.getPendingUsers);
 router.post('/users/:id/approve', adminController.approveUser);
+router.post('users/:id/reject', adminController.rejectUser);
 router.post('/users/:id/ban', adminController.banUser);
 
 router.post('/topics/:id/close', adminController.closeTopic);
