@@ -10,8 +10,6 @@ function initSocket(server){
         }
     });
 
-    setTimeout(io);
-
     io.use(socketAuth);
 
     io.on('connection', (socket) => {
