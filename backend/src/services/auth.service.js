@@ -1,5 +1,6 @@
 const User = require('../models/User.model');
 const jwt = require('jsonwebtoken');
+const { getIO } = require('../socket/io');
 
 async function register({email, password, country}){
     const exists = await User.findOne({email});
