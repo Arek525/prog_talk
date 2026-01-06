@@ -81,6 +81,7 @@ async function hideTopic(topicId) {
 module.exports = {
     listPendingUsers,
     approveUser,
+    rejectUser,
     banUser,
     closeTopic,
     hideTopic

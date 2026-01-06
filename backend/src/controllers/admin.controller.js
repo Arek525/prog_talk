@@ -57,6 +57,7 @@ async function hideTopic(req, res) {
 module.exports = {
     getPendingUsers,
     approveUser,
+    rejectUser,
     banUser,
     closeTopic,
     hideTopic
