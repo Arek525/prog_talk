@@ -3,16 +3,16 @@ const TopicBlock = require('../models/TopicBlock.model');
 const Topic = require('../models/Topic.model');
 const {getParentChain} = require('./topicTree.service');
 
-// is a moderator if still is one on any higher topic
+// the highest decision matters, moderating is propagated
 async function isModerator(userId, topicId) {
   const chain = await getParentChain(topicId);
 
-  for (let i = 0; i < chain.length; i++) {
-    const current = chain[i];
+  for (let i = chain.length - 1; i >= 0; i--) {
+    const currentTopicId = chain[i];
 
     const mod = await TopicModerator.findOne({
       userId,
-      topicId: current,
+      topicId: currentTopicId,
     });
 
     if (!mod) continue;
@@ -24,11 +24,11 @@ async function isModerator(userId, topicId) {
 }
 
 
-// is blocked if still is blocked on any higher topic
+// the highest decision matters, blocking is propagated
 async function isUserBlocked(userId, topicId) {
   const chain = await getParentChain(topicId);
 
-  for (let i = 0; i < chain.length; i++) {
+  for (let i = chain.length - 1; i >= 0; i -= 1) {
     const blockedAt = chain[i];
     const block = await TopicBlock.findOne({
       userId,
@@ -37,8 +37,10 @@ async function isUserBlocked(userId, topicId) {
 
     if (!block) continue;
 
-    const child = chain[i - 1]; //checking if our subtopic is on the exception branch
-    if (child && block.exceptions.includes(child)) continue;
+    const child = chain[i - 1];
+    if (child && block.exceptions.some((id) => id.equals(child))) {
+      continue;
+    }
 
     return true;
   }
