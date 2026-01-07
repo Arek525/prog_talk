@@ -11,7 +11,8 @@ export const useAuthStore = defineStore('auth', {
         isLoggedIn: (s) => !!s.user,
         isPending: (s) => s.user?.status === 'PENDING',
         isActive: (s) => s.user?.status === 'ACTIVE',
-        isAdmin: (s) => s.user?.status === 'ADMIN'
+        isAdmin: (s) => s.user?.status === 'ADMIN',
+        isBanned: (s) => s.user?.status === 'BANNED'
     },
 
     actions: {
