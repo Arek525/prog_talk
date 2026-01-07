@@ -22,7 +22,11 @@ export const useAuthStore = defineStore('auth', {
                 this.user = res.data
                 return this.user
             } catch (err) {
-                //401 not logged (or non-existent/expired cookie)
+                //401 not logged/is banned (or non-existent/expired cookie)
+                if(err.response?.status === 403){
+                    this.user = {status: 'BANNED'}
+                    return this.user
+                }
                 this.user = null
                 return null
             } finally {
