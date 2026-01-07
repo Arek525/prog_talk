@@ -36,10 +36,6 @@ async function login({email, password}){
     if (user.status === 'BANNED') {
         throw new Error('User is banned');
     }
-
-    else if(user.status === 'PENDING'){
-        throw new Error('User is pending')
-    }
     
     const valid = user.validatePassword(password);
     if(!valid) return null;
