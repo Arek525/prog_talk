@@ -1,5 +1,7 @@
 const TopicModerator = require('../models/TopicModerator.model');
 const TopicBlock = require('../models/TopicBlock.model');
+const User = require('../models/User.model');
+
 const {
   isModerator,
   isUserBlocked,
@@ -8,8 +10,10 @@ const {
 
 
 async function addModerator(userId, topicId, targetUserId){
-    if(!(await isModerator(userId, topicId))){
-        throw new Error('Not a moderator');
+    const user = await User.findById(userId);
+
+    if(!(await isModerator(userId, topicId)) || user.role === 'ADMIN'){
+        throw new Error('Not a moderator or admin');
     }
 
     if(await isModerator(targetUserId, topicId)){
@@ -24,8 +28,10 @@ async function addModerator(userId, topicId, targetUserId){
 }
 
 async function removeModerator(userId, topicId, targetUserId){
-    if(!(await isModerator(userId, topicId))){
-        throw new Error('Not a moderator');
+    const user = await User.findById(userId);
+
+    if(!(await isModerator(userId, topicId)) || user.role === 'ADMIN'){
+        throw new Error('Not a moderator or admin');
     }
 
     if(!(await isModerator(targetUserId, topicId))){
@@ -36,6 +42,11 @@ async function removeModerator(userId, topicId, targetUserId){
         throw new Error('Cannot remove moderator privileges from topic founder');
     }
 
+    //higher decision is more important
+    const localMod = await TopicModerator.findOne({ topicId, userId: targetUserId });
+    if (!localMod) throw new Error('Cannot remove moderating. User was granted on a higher topic.');
+
+
     await TopicModerator.deleteOne({
         topicId,
         userId: targetUserId
@@ -43,9 +54,12 @@ async function removeModerator(userId, topicId, targetUserId){
 }
 
 async function blockUser(userId, topicId, targetUserId, exceptions = [], reason){
-    if(!(await isModerator(userId, topicId))) {
-        throw new Error('Not a moderator');
+    const user = await User.findById(userId);
+
+    if(!(await isModerator(userId, topicId)) || user.role === 'ADMIN'){
+        throw new Error('Not a moderator or admin');
     }
+
 
     if(await isUserBlocked(targetUserId, topicId)){
         throw new Error('User is already blocked')
@@ -65,13 +79,20 @@ async function blockUser(userId, topicId, targetUserId, exceptions = [], reason)
 }
 
 async function unblockUser(userId, topicId, targetUserId) {
-    if (!(await isModerator(userId, topicId))) {
-        throw new Error('Not a moderator');
+    const user = await User.findById(userId);
+
+    if(!(await isModerator(userId, topicId)) || user.role === 'ADMIN'){
+        throw new Error('Not a moderator or admin');
     }
+
 
     if (!(await isUserBlocked(targetUserId, topicId))) {
         throw new Error('User is not blocked');
     }
+
+    //higher decision is more important
+    const localBlock = await TopicBlock.findOne({ topicId, userId: targetUserId });
+    if (!localBlock) throw new Error('Cannot remove blocking. User was blocked on a higher topic.');
 
     await TopicBlock.deleteOne({
         topicId,
