@@ -1,6 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth.store'
 
+import LoginView from '../views/LoginView.vue'
+import RegisterView from '../views/RegisterView.vue'
+import PendingView from '../views/PendingView.vue'
+import ForumView from '../views/ForumView.vue'
+import ProfileView from '../views/ProfileView.vue'
+import AdminView from '../views/AdminView.vue'
+import BannedView from '../views/BannedView.vue'
+
 const router = createRouter({
   history: createWebHistory(),
   routes: [
