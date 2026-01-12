@@ -60,7 +60,8 @@ function me(req, res){
         id: req.user._id,
         email: req.user.email,
         role: req.user.role,
-        status: req.user.status
+        status: req.user.status,
+        country: req.user.country
     })
 }
 
