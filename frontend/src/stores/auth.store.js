@@ -47,6 +47,10 @@ export const useAuthStore = defineStore('auth', {
             } finally{
                 this.user = null
             }
+        },
+
+        async refresh(){
+            await this.fetchMe()
         }
     }
 })
