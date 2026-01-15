@@ -3,14 +3,16 @@ const TopicModerator = require('../models/TopicModerator.model');
 const { isModerator } = require('./permissions.service');
 const { getParentChain } = require('./topicTree.service');
 
-async function createRootTopic(userId, {title, description}){
+async function createRootTopic(userId, {title, description, tags = []}){
     if(!title) throw new Error('Title required');
 
     const topic = new Topic({
         title,
         description,
+        tags,
         parentId: null,
-        createdBy: userId
+        createdBy: userId,
+        tags
     });
 
     await topic.save();
@@ -24,7 +26,7 @@ async function createRootTopic(userId, {title, description}){
     return topic;
 }
 
-async function createSubtopic(userId, parentId, {title, description}){
+async function createSubtopic(userId, parentId, {title, description, tags = []}){
     if(!(await isModerator(userId, parentId))){
         throw new Error('Not a moderator');
     }
@@ -44,7 +46,8 @@ async function createSubtopic(userId, parentId, {title, description}){
         title,
         description,
         parentId,
-        createdBy: userId
+        createdBy: userId,
+        tags: tags
     });
 
     await topic.save();
@@ -97,7 +100,11 @@ async function getTopic(user, topicId){
         throw new Error('Topic not found');
     }
 
-    return topic;
+    const isUserModerator = await isModerator(user._id, topicId);
+    const topicData = topic.toObject();
+    topicData.isModerator = isUserModerator;
+
+    return topicData;
 }
 
 async function getTopicTree(user, topicId) {
@@ -114,6 +121,19 @@ async function getTopicTree(user, topicId) {
     return topics.filter(topic => !topic.isHidden);
 }
 
+async function getSubtopics(user, topicId){
+    const topic = await Topic.findById(topicId);
+    if(!topic) throw new Error('Topic not found');
+
+    const filter = {parentId: topicId};
+
+    if(user.role !== 'ADMIN'){
+        filter.isHidden = false;
+    }
+
+    return Topic.find(filter);
+}
+
 
 module.exports = {
   createRootTopic,
@@ -122,4 +142,5 @@ module.exports = {
   getRootTopics,
   getTopic,
   getTopicTree,
+  getSubtopics
 };
