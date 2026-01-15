@@ -12,8 +12,22 @@ async function createPost(userId, topicId, data){
         throw new Error('Topic is closed');
     }
 
+    if (topic.isHidden) {
+        throw new Error('Topic is hidden');
+    }
+
     if(await isUserBlocked(userId, topicId)){
         throw new Error('User is blocked in this topic');
+    }
+
+    const allowedTags = topic.tags || [];
+
+    const invalidTags = (data.tags ||  []).filter(
+        t => !allowedTags.includes(t)
+    )
+
+    if(invalidTags.length){
+        throw new Error('Invalid tags for this topic');
     }
 
     const post = await Post.create({
@@ -21,6 +35,7 @@ async function createPost(userId, topicId, data){
         authorId: userId,
         content: data.content,
         codeSnippets: data.codeSnippets || [],
+        tags: data.tags || [],
         references: data.references || [],
     })
 
