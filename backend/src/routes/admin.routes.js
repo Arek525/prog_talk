@@ -2,16 +2,22 @@ const express = require('express');
 const router = express.Router();
 
 const adminController = require('../controllers/admin.controller');
-const {requireAuth, requireAdmin}  = require('../middleware/auth.middleware');
+const {requireActive, requireAdmin}  = require('../middleware/auth.middleware');
 
-router.use(requireAuth, requireAdmin);
+router.use(requireActive, requireAdmin);
 
 router.get('/users/pending', adminController.getPendingUsers);
+router.get('/users/banned', adminController.getBannedUsers);
+router.get('/users/active', adminController.getActiveUsers);
 router.post('/users/:id/approve', adminController.approveUser);
-router.post('users/:id/reject', adminController.rejectUser);
+router.post('/users/:id/reject', adminController.rejectUser);
 router.post('/users/:id/ban', adminController.banUser);
+router.post('/users/:id/unban', adminController.unbanUser);
+
 
 router.post('/topics/:id/close', adminController.closeTopic);
 router.post('/topics/:id/hide', adminController.hideTopic);
+
+router.get('/notifications', adminController.getNotifications);
 
 module.exports = router;
