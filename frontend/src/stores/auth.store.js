@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { api } from "../services/api";
+import { socket } from '../services/socket'
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -8,10 +9,10 @@ export const useAuthStore = defineStore('auth', {
     }),
 
     getters: {
-        isLoggedIn: (s) => !!s.user,
+        isLoggedIn: (s) => !!s.user && s.user.status !== 'BANNED',
         isPending: (s) => s.user?.status === 'PENDING',
         isActive: (s) => s.user?.status === 'ACTIVE',
-        isAdmin: (s) => s.user?.status === 'ADMIN',
+        isAdmin: (s) => s.user?.role === 'ADMIN',
         isBanned: (s) => s.user?.status === 'BANNED'
     },
 
@@ -23,7 +24,6 @@ export const useAuthStore = defineStore('auth', {
                 this.user = res.data
                 return this.user
             } catch (err) {
-                //401 not logged/is banned (or non-existent/expired cookie)
                 if(err.response?.status === 403){
                     this.user = {status: 'BANNED'}
                     return this.user
@@ -36,9 +36,16 @@ export const useAuthStore = defineStore('auth', {
         },
 
         async login({email, password}){
-            await api.post('auth/login', {email, password})
-            await this.fetchMe()
-            return this.user
+            try {
+                await api.post('auth/login', { email, password });
+                await this.fetchMe();
+                return this.user;
+            } catch (err) {
+                if (err.response?.status === 403) {
+                    this.user = { status: 'BANNED' };
+                }
+                throw err;
+            }
         },
 
         async logout(){
