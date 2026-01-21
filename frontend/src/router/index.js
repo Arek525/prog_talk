@@ -7,6 +7,7 @@ import PendingView from '../views/PendingView.vue'
 import ForumView from '../views/ForumView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import AdminView from '../views/AdminView.vue'
+import TopicView from '../views/TopicView.vue'
 import BannedView from '../views/BannedView.vue'
 
 const router = createRouter({
@@ -15,11 +16,12 @@ const router = createRouter({
     { path: '/login', component: LoginView },
     { path: '/register', component: RegisterView },
 
-    { path: '/banned', component: BannedView },
     { path: '/pending', component: PendingView },
+    { path: '/banned', component: BannedView },
     { path: '/forum', component: ForumView },
     { path: '/profile', component: ProfileView },
     { path: '/admin', component: AdminView },
+    { path: '/topics/:id', component: TopicView},
 
     { path: '/', redirect: '/forum' },
   ],
@@ -28,14 +30,13 @@ const router = createRouter({
 router.beforeEach(async (to) => {
     const auth = useAuthStore()
 
-    //user not known
     if(!auth.user && !auth.loading){
-        await auth.fetchMe()
+        await auth.fetchMe();
     }
 
-    if(auth.isBanned){
-        if(to.path === '/banned') return true
-        return '/banned'
+    if (auth.isBanned) {
+        if (['/banned', '/login', '/register'].includes(to.path)) return true;
+        return '/banned';
     }
 
     if(!auth.isLoggedIn){
@@ -48,7 +49,7 @@ router.beforeEach(async (to) => {
         return '/pending'
     }
 
-    if(to.path === '/login' || to.path === '/register') return '/forum'
+    if (['/pending', '/login', '/register', '/banned'].includes(to.path)) return '/forum'
 
     if(to.path === '/admin' && !auth.isAdmin) return '/forum'
 
