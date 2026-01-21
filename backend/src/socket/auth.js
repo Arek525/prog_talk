@@ -18,7 +18,7 @@ module.exports = async function socketAuth(socket, next){
         const user = await User.findById(payload.sub);
         if(!user) return next(new Error('Unauthorized'));
 
-        if(user.status !== 'ACTIVE' && user.role !== 'ADMIN'){
+        if(user.status === 'BANNED'){
           return next(new Error('Forbidden'));
         }
 
