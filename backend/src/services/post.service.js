@@ -4,6 +4,7 @@ const Topic = require('../models/Topic.model');
 const {isUserBlocked} = require('./permissions.service');
 const { getIO } = require('../socket/io');
 
+
 async function createPost(userId, topicId, data){
     const topic = await Topic.findById(topicId); 
     if (!topic) throw new Error('Topic not found');
@@ -41,32 +42,54 @@ async function createPost(userId, topicId, data){
 
     const io = getIO();
     if(io){
-        io.to(String(topicId)).emit('post:created', post);
+        io.to(String(topicId)).emit('post:changed', post);
     }
 
     return post;
 }
 
-async function listPosts(topicId, page, limit){
+async function listPosts(user, topicId, page, limit){
     const skip = (page - 1) * limit;
+    const userId = user._id;
+
+    const filter = { topicId };
+    if (user.role !== 'ADMIN') {
+        filter.deletedAt = null;
+    }
 
     const [posts, total] = await Promise.all([
-        Post.find({
-            topicId,
-            deletedAt: null
-        })
-        .sort({createdAt: 1})
-        .skip(skip)
-        .limit(limit),
-
-        Post.countDocuments({
-            topicId,
-            deletedAt: null
-        })
+        Post.find(filter)
+            .sort({createdAt: 1})
+            .skip(skip)
+            .limit(limit),
+        Post.countDocuments(filter)
     ]);
 
+    const postIds = posts.map(p => p._id);
+
+    const likes = await Like.find({
+        postId: { $in: postIds }
+    });
+
+    const likesByPost = {};
+    for (const l of likes){
+        const pid = String(l.postId);
+        likesByPost[pid] ??= { count: 0, users: [] };
+        likesByPost[pid].count++;
+        likesByPost[pid].users.push(String(l.userId));
+    }
+
+    const items = posts.map(p => {
+        const id = String(p._id);
+        const data = p.toObject();
+        const like = likesByPost[id];
+        data.likesCount = like?.count || 0;
+        data.likedByMe = (like?.users || []).includes(String(userId));
+        return data;
+    });
+
     return {
-        items: posts,
+        items,
         page,
         limit,
         total,
@@ -98,10 +121,7 @@ async function deletePost(userId, postId){
 
     const io = getIO();
     if(io){
-        io.to(String(post.topicId)).emit('post:deleted', {
-            postId: post._id,
-            topicId: post.topicId
-        });
+        io.to(String(post.topicId)).emit('post:changed');
     }
 }
 
@@ -119,10 +139,7 @@ async function likePost(userId, postId){
     if(!post) return;
 
     const io = getIO();
-    io.to(String(post.topicId)).emit('post:liked', {
-        postId,
-        userId
-    })
+    io.to(String(post.topicId)).emit('post:changed')
 }
 
 async function unlikePost(userId, postId){
@@ -136,10 +153,7 @@ async function unlikePost(userId, postId){
 
     const io = getIO();
     if(io){
-        io.to(String(post.topicId)).emit('post:unliked', {
-            postId,
-            userId
-        });
+        io.to(String(post.topicId)).emit('post:changed');
     }
 }
 
@@ -150,4 +164,4 @@ module.exports = {
     deletePost,
     likePost,
     unlikePost,
-};
+}

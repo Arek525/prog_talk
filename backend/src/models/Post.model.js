@@ -25,6 +25,10 @@ const PostSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    tags: {
+      type: [String],
+      default: []
+    },
     codeSnippets: [CodeSnippetSchema],
     references: [
       {

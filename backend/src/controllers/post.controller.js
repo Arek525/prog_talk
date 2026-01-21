@@ -18,9 +18,10 @@ async function listPosts(req, res){
         const {page = 1, limit = 10} = req.query;
 
         const result = await postService.listPosts(
+            req.user,
             req.params.id,
             Number(page),
-            Number(limit)
+            Number(limit),
         )
 
         res.json(result);
