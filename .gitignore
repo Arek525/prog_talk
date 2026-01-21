@@ -37,3 +37,6 @@ build/
 # Docker
 # =========================
 docker-data/
+
+# nginx certs (local only)
+nginx/certs/*
