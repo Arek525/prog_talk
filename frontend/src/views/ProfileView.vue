@@ -2,8 +2,10 @@
   import { ref, onMounted } from 'vue'
   import { api } from '../services/api'
   import { useAuthStore } from '../stores/auth.store'
+import { useRouter } from 'vue-router'
 
   const auth = useAuthStore()
+  const router = useRouter()
 
   const country = ref('')
   const password = ref('')
@@ -14,7 +16,7 @@
 
   onMounted(async () => {
     try{
-      const res = await api.get('users/me')
+      const res = await api.get('/users/me')
       country.value = res.data.country || ''
     } catch(e){
       error.value = 'Failed to load profile'
@@ -33,7 +35,7 @@
     loading.value = true
 
     try{
-      const res = api.patch('users/me', {
+      const res = api.patch('/users/me', {
         country: country.value || undefined,
         password: password.value || undefined
       })
@@ -47,6 +49,11 @@
     } finally{
       loading.value = false
     }
+  }
+
+  async function logout(){
+    await auth.logout()
+    router.push('/login')
   }
 </script>
 
@@ -92,4 +99,5 @@
     <p v-if="message" style="color: green">{{ message }}</p>
     <p v-if="error" style="color: red">{{ error }}</p>
   </div>
+  <button @click="logout">Logout</button>
 </template>
