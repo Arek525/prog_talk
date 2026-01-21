@@ -1,4 +1,7 @@
 const moderatorService = require('../services/moderator.service');
+const User = require('../models/User.model');
+const { isModerator } = require('../services/permissions.service');
+const TopicModerator = require('../models/TopicModerator.model');
 
 async function addModerator(req, res){
     try{
@@ -23,6 +26,28 @@ async function removeModerator(req, res){
         res.json({message: 'Moderator removed'});
     } catch(err){
         res.status(403).json({error: err.message});
+    }
+}
+
+async function listModerators(req, res){
+    try{
+        const userId = req.user._id;
+        const topicId = req.params.id;
+        const user = await User.findById(userId);
+
+        if(!(await isModerator(userId, topicId)) && user.role !== 'ADMIN'){
+            return res.status(403).json({error: 'Not a moderator or admin'})
+        }
+
+        const mods = await TopicModerator.find({ topicId })
+            .populate('userId', 'email');
+
+        res.json(mods.map(m => ({
+            userId: m.userId._id,
+            email: m.userId.email
+        })));
+    } catch(err){
+        res.status(403).json({error: err.message})
     }
 }
 
@@ -57,6 +82,7 @@ async function unblockUser(req, res) {
 module.exports = {
     addModerator,
     removeModerator,
+    listModerators,
     blockUser,
     unblockUser,
 };

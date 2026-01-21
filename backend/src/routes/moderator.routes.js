@@ -2,29 +2,35 @@ const express = require('express');
 const router = express.Router();
 
 const moderatorController = require('../controllers/moderator.controller');
-const { requireAuth } = require('../middleware/auth.middleware');
+const { requireActive } = require('../middleware/auth.middleware');
 
 router.post(
   '/topics/:id/moderators',
-  requireAuth,
+  requireActive,
   moderatorController.addModerator
 );
 
 router.delete(
   '/topics/:id/moderators/:userId',
-  requireAuth,
+  requireActive,
   moderatorController.removeModerator
+);
+
+router.get(
+  '/topics/:id/moderators',
+  requireActive,
+  moderatorController.listModerators
 );
 
 router.post(
   '/topics/:id/blocks',
-  requireAuth,
+  requireActive,
   moderatorController.blockUser
 );
 
 router.delete(
   '/topics/:id/blocks/:userId',
-  requireAuth,
+  requireActive,
   moderatorController.unblockUser
 );
 
