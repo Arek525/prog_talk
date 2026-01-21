@@ -1,5 +1,4 @@
 const Topic = require('../models/Topic.model');
-const { isUserBlocked } = require('../services/permissions.service');
 
 module.exports = function registerHandlers(io, socket){
     const user = socket.user;
@@ -8,7 +7,15 @@ module.exports = function registerHandlers(io, socket){
         socket.join('admins');
     }
 
-    socket.join(`user:${user._id}`)
+    socket.join(`user:${user._id}`);
+
+    socket.on('forum:join', () => {
+        socket.join('forum');
+    })
+
+    socket.on('forum:leave', () => {
+        socket.leave('forum');
+    })
 
     socket.on('topic:join', async ({topicId}) => {
         try{
@@ -23,7 +30,7 @@ module.exports = function registerHandlers(io, socket){
             socket.emit('topic:joined', {topicId});
 
         } catch(err){
-            socket.emit('error', {message: 'Join failed'})
+            socket.emit('topic:join:error', {message: 'Join failed'})
         }
     });
 
