@@ -1,4 +1,5 @@
 const User = require('../models/User.model');
+const notificationService = require('./notification.service');
 const jwt = require('jsonwebtoken');
 const { getIO } = require('../socket/io');
 
@@ -7,6 +8,11 @@ async function register({email, password, country}){
     if(exists){
         throw new Error('Email already used');
     }
+
+    if (!password || password.length < 6) {
+        throw new Error('Password must be at least 6 characters');
+    }
+
 
     const user = new User({
         email,
@@ -17,12 +23,15 @@ async function register({email, password, country}){
     user.setPassword(password);
     await user.save();
 
+    await notificationService.createNotification({
+        type: 'USER_PENDING',
+        message: `Nowa rejestracja oczekuje na decyzję: ${user.email}`
+    });
+
     const io = getIO();
     if(io){
-        io.to('admins').emit('user:pending', {
-            userId: user._id,
-            email: user.email
-        })
+        io.to('admins').emit('notifications:changed')
+        io.to('admins').emit('users:changed')
     }
 
     return user;
