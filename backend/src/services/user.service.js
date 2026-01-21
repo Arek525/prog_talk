@@ -22,6 +22,9 @@ async function updateProfile(userId, { password, country }) {
     }
 
     if (password) {
+        if (password.length < 6) {
+            throw new Error('Password must be at least 6 characters');
+        }
         user.setPassword(password);
     }
 

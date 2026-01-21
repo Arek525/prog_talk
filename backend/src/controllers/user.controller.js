@@ -1,4 +1,5 @@
 const userService = require('../services/user.service');
+const User = require('../models/User.model');
 
 async function getMe(req, res){
     try{
@@ -21,7 +22,13 @@ async function updateMe(req, res){
     }
 }
 
+async function listUsers(req, res){
+    const users = await User.find({}, '_id email status');
+    res.json(users)
+}
+
 module.exports = {
     getMe,
-    updateMe
+    updateMe,
+    listUsers
 }
