@@ -1,3 +1,4 @@
+const TopicBlock = require('../models/TopicBlock.model');
 const topicService = require('../services/topic.service');
 
 async function createRootTopic(req, res){
@@ -8,6 +9,9 @@ async function createRootTopic(req, res){
         );
         res.status(201).json(topic);
     } catch(err){
+        if (err?.code === 11000) {
+            return res.status(409).json({ error: 'Root topic with this title already exists' });
+        }
         res.status(400).json({error: err.message});
     }
 }
@@ -21,6 +25,9 @@ async function createSubtopic(req, res){
         );
         res.status(201).json(topic);
     } catch(err){
+        if (err?.code === 11000) {
+            return res.status(409).json({ error: 'Subtopic with this title already exists in this subtopic' });
+        }
         res.status(403).json({error: err.message});
     }
 }
@@ -54,6 +61,31 @@ async function getTopicTree(req, res){
     res.json(tree)
 }
 
+async function getSubtopics(req, res){
+    try{
+        const topics = await topicService.getSubtopics(
+            req.user,
+            req.params.id
+        );
+        res.json(topics);
+    } catch(err){
+        res.status(404).json({error: err.message});
+    }
+}
+
+async function listBlockedUsers(req, res){
+    const blocks = await TopicBlock.find({
+        topicId: req.params.id,
+    }).populate('userId', 'email');
+
+    res.json(
+        blocks.map(b => ({
+            userId: b.userId._id,
+            email: b.userId.email
+        }))
+    );
+}
+
 module.exports = {
   createRootTopic,
   createSubtopic,
@@ -61,4 +93,6 @@ module.exports = {
   getRootTopics,
   getTopic,
   getTopicTree,
+  getSubtopics,
+  listBlockedUsers
 };

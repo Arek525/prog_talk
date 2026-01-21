@@ -1,7 +1,16 @@
 const Topic = require('../models/Topic.model');
 const TopicModerator = require('../models/TopicModerator.model');
-const { isModerator } = require('./permissions.service');
+const { isModerator, isUserBlocked } = require('./permissions.service');
 const { getParentChain } = require('./topicTree.service');
+const { getIO } = require('../socket/io');
+
+function safeGetIO() {
+    try { 
+        return getIO(); 
+    } catch (e) { 
+        return null; 
+    }
+}
 
 async function createRootTopic(userId, {title, description, tags = []}){
     if(!title) throw new Error('Title required');
@@ -23,6 +32,9 @@ async function createRootTopic(userId, {title, description, tags = []}){
         promotedBy: userId
     });
 
+    const io = safeGetIO();
+    if(io) io.to('forum').emit('forum:changed');
+
     return topic;
 }
 
@@ -30,6 +42,7 @@ async function createSubtopic(userId, parentId, {title, description, tags = []})
     if(!(await isModerator(userId, parentId))){
         throw new Error('Not a moderator');
     }
+
 
     const parentTopic = await Topic.findById(parentId);
     if (!parentTopic) throw new Error('Topic not found');
@@ -51,18 +64,27 @@ async function createSubtopic(userId, parentId, {title, description, tags = []})
     });
 
     await topic.save();
+
+    const io = safeGetIO();
+    if (io) io.to(String(parentId)).emit('topic:changed');
+
     return topic;
 }
 
 async function updateTopic(userId, topicId, data) {
-    if (!(await isModerator(userId, topicId))) {
-        throw new Error('Not a moderator');
-    }
-
     const topic = await Topic.findById(topicId);
     if (!topic) {
         throw new Error('Topic not found');
     }
+
+    if (topic.isHidden) {
+        throw new Error('Topic is hidden');
+    }
+
+    if (!(await isModerator(userId, topicId))) {
+        throw new Error('Not a moderator');
+    }
+
 
     if (topic.isClosed) {
         throw new Error('Topic is closed');
@@ -77,6 +99,15 @@ async function updateTopic(userId, topicId, data) {
         { $set: update },
         { new: true }
     );
+
+    const io = safeGetIO();
+    if(topic.parentId === null){
+        if(io) io.to('forum').emit('forum:changed');
+    } else{
+        if (io) io.to(String(topic.parentId)).emit('topic:changed');
+    }
+
+    if (io) io.to(String(topicId)).emit('topic:changed');
 
     return updatedTopic;
 }
@@ -100,9 +131,13 @@ async function getTopic(user, topicId){
         throw new Error('Topic not found');
     }
 
-    const isUserModerator = await isModerator(user._id, topicId);
+    const [isUserModerator, userBlocked] = await Promise.all([
+        isModerator(user._id, topicId),
+        isUserBlocked(user._id, topicId)
+    ]);
     const topicData = topic.toObject();
     topicData.isModerator = isUserModerator;
+    topicData.isBlocked = userBlocked;
 
     return topicData;
 }

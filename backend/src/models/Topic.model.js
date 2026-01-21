@@ -15,6 +15,10 @@ const TopicSchema = new mongoose.Schema(
     description: {
       type: String,
     },
+    tags: {
+      type: [String],
+      default: []
+    },
     isClosed: {
       type: Boolean,
       default: false,
