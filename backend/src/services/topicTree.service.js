@@ -13,7 +13,6 @@ async function getParentChain(topicId){
     return chain;
 }
 
-// possibly for later statistics use
 async function getSubtreeTopicIds(topicId){
     const result = [topicId];
 
