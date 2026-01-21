@@ -12,7 +12,18 @@ const requireAdmin = [
     }
 ];
 
+const requireActive = [
+    requireAuth,
+    (req, res, next) => {
+        if(req.user.status === 'BANNED'){
+            return res.status(403).json({message: 'User is banned'});
+        }
+        next();
+    }
+]
+
 module.exports = {
     requireAuth,
-    requireAdmin
+    requireAdmin,
+    requireActive
 };
