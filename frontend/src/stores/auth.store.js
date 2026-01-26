@@ -17,6 +17,13 @@ export const useAuthStore = defineStore('auth', {
     },
 
     actions: {
+        syncSocket() {
+            if (this.user && this.user.status !== 'BANNED') {
+                if (!socket.connected) socket.connect()
+            } else {
+                if (socket.connected) socket.disconnect()
+            }
+        },
         async fetchMe(){
             this.loading = true
             try{
@@ -31,6 +38,7 @@ export const useAuthStore = defineStore('auth', {
                 this.user = null
                 return null
             } finally {
+                this.syncSocket()
                 this.loading = false
             }
         },
@@ -43,6 +51,7 @@ export const useAuthStore = defineStore('auth', {
             } catch (err) {
                 if (err.response?.status === 403) {
                     this.user = { status: 'BANNED' };
+                    this.syncSocket()
                 }
                 throw err;
             }
@@ -53,6 +62,7 @@ export const useAuthStore = defineStore('auth', {
                 await api.post('auth/logout')
             } finally{
                 this.user = null
+                this.syncSocket()
             }
         },
 

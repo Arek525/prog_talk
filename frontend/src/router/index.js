@@ -30,7 +30,7 @@ const router = createRouter({
 router.beforeEach(async (to) => {
     const auth = useAuthStore()
 
-    if(!auth.user && !auth.loading){
+    if (!auth.user && !auth.loading && !['/login', '/register'].includes(to.path)) {
         await auth.fetchMe();
     }
 
