@@ -40,6 +40,9 @@
             });
 
             content.value = '';
+            code.value = '';
+            language.value = '';
+            selectedTags.value = [];
         } catch(e){
             error.value = e?.response?.data?.error ||
             'Cannot create post';
@@ -52,7 +55,7 @@
 <template>
     <h3>Add post</h3>
 
-    <form @submit.prevent="submit">
+    <form class="form-stack" @submit.prevent="submit">
         <textarea
             v-model="content"
             placeholder="Write your post..."
@@ -63,23 +66,26 @@
             placeholder="Code snippet (optional)"
         />
 
-        <select 
-            v-model="language" 
-            v-if="code.length"
-        >
-            <option>js</option>
-            <option>python</option>
-            <option>cpp</option>
-        </select>
+        <div v-if="code.length" class="field">
+            <label>Language</label>
+            <select v-model="language">
+                <option disabled value="">Select language</option>
+                <option value="js">JavaScript</option>
+                <option value="python">Python</option>
+                <option value="cpp">C++</option>
+            </select>
+        </div>
 
-        <label v-for="t in props.tags" :key="t">
-            <input
-                type="checkbox"
-                v-model="selectedTags"
-                :value="t"
-            />
-            {{ t }}
-        </label>
+        <div v-if="props.tags.length" class="tag-picker">
+            <label class="tag-option" v-for="t in props.tags" :key="t">
+                <input
+                    type="checkbox"
+                    v-model="selectedTags"
+                    :value="t"
+                />
+                <span>#{{ t }}</span>
+            </label>
+        </div>
 
         <button
             type="submit"

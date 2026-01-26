@@ -150,12 +150,12 @@
 </script>
 
 <template>
-    <section>
+    <section class="card section">
         <h3>Moderator actions</h3>
 
-        <p v-if="error" style="color: red;">{{ error }}</p>
+        <p v-if="error" class="error">{{ error }}</p>
 
-        <div>
+        <div class="mod-block form-stack">
         <h4>Add moderator</h4>
             <select v-model="newModeratorId">
                 <option disabled value="">Select user</option>
@@ -167,10 +167,12 @@
                     {{ u.email }}
                 </option>
             </select>
-            <button @click="addModerator" :disabled="!newModeratorId">Add</button>
+            <div class="inline-actions">
+                <button @click="addModerator" :disabled="!newModeratorId">Add</button>
+            </div>
         </div>
 
-        <div>
+        <div class="mod-block form-stack">
             <h4>Remove moderator</h4>
             <select v-model="userToRemoveMod">
                 <option disabled value="">Select user</option>
@@ -182,11 +184,13 @@
                     {{ u.email }}
                 </option>
             </select>
-            <button @click="removeModerator">Remove</button>
+            <div class="inline-actions">
+                <button @click="removeModerator">Remove</button>
+            </div>
         </div>
 
 
-        <div>
+        <div class="mod-block form-stack">
             <h4>Block user</h4>
             <select v-model="userToBlock">
                 <option disabled value="">Select user</option>
@@ -200,23 +204,28 @@
             </select>
 
             <div v-if="subtopics.length">
-                <p>Allow access to subtopics:</p>
-                <label
-                    v-for="t in props.subtopics" 
-                    :key="t._id"
-                >
-                    <input
-                        type="checkbox"
-                        :value="t._id"
-                        v-model="exceptions"
+                <p class="muted">Allow access to subtopics:</p>
+                <div class="checkbox-grid">
+                    <label
+                        class="tag-option"
+                        v-for="t in props.subtopics" 
+                        :key="t._id"
                     >
-                    {{ t.title }}
-                </label>
+                        <input
+                            type="checkbox"
+                            :value="t._id"
+                            v-model="exceptions"
+                        >
+                        <span>{{ t.title }}</span>
+                    </label>
+                </div>
             </div>
-            <button @click="blockUser" :disabled="!userToBlock">Block</button>
+            <div class="inline-actions">
+                <button @click="blockUser" :disabled="!userToBlock">Block</button>
+            </div>
         </div>
 
-        <div>
+        <div class="mod-block form-stack">
             <h4>Unblock user</h4>
             <select v-model="userToUnblock">
                 <option disabled value="">Select user</option>
@@ -229,24 +238,28 @@
                 </option>
             </select>
 
-            <button @click="unblockUser" :disabled="!userToUnblock">
-                Unblock
-            </button>
+            <div class="inline-actions">
+                <button @click="unblockUser" :disabled="!userToUnblock">
+                    Unblock
+                </button>
+            </div>
         </div>
 
-        <div>
+        <div class="mod-block form-stack">
             <h4>Edit topic description</h4>
             <button v-if="!isEditingDescription" @click="openDescriptionEditor">
                 Edit
             </button>
-            <div v-else>
+            <div v-else class="form-stack">
                 <textarea v-model="descriptionDraft" placeholder="New description" />
-                <button @click="updateDescription" :disabled="descriptionLoading">
-                    Save
-                </button>
-                <button type="button" @click="cancelDescriptionEdit" :disabled="descriptionLoading">
-                    Cancel
-                </button>
+                <div class="inline-actions">
+                    <button @click="updateDescription" :disabled="descriptionLoading">
+                        Save
+                    </button>
+                    <button class="ghost" type="button" @click="cancelDescriptionEdit" :disabled="descriptionLoading">
+                        Cancel
+                    </button>
+                </div>
             </div>
         </div>
 

@@ -24,16 +24,16 @@
 </script>
 
 <template>
-    <div style="max-width: 360px; margin: 40px auto;">
+    <div class="page auth-card">
         <h1>Login</h1>
 
-        <form @submit.prevent="onSubmit">
+        <form class="form-stack" @submit.prevent="onSubmit">
             <input v-model="email" placeholder="email"/>
             <input v-model="password" placeholder="password" type="password"/>
             <button type="submit">Login</button>
         </form>
 
-        <p v-if="error" style="color: red;">{{ error }}</p>
+        <p v-if="error" class="error">{{ error }}</p>
 
         <p>
             No account?

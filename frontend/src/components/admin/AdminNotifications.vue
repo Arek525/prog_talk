@@ -75,14 +75,17 @@ onBeforeUnmount(() => {
     right: 16px;
     bottom: 16px;
     width: 320px;
-    background-color:rgb(11, 98, 180);
-    border: 1px solid #ddd;
+    background: linear-gradient(180deg, rgba(20, 42, 62, 0.95), rgba(17, 29, 44, 0.95));
+    border: 1px solid rgba(79, 181, 173, 0.35);
     padding: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.35);
     font-size: 14px;
+    color: #e6edf3;
+    border-radius: 12px;
 }
 .admin-notify ul { list-style: none; padding: 0; margin: 8px 0 0; }
-.admin-notify li { cursor: pointer; padding: 6px 0; border-top: 1px solid #eee; }
+.admin-notify li { cursor: pointer; padding: 6px 0; border-top: 1px solid rgba(255,255,255,0.08); }
+.admin-notify li:hover { color: #8fe0d8; }
 .admin-notify__list {
   max-height: 220px;
   overflow-y: auto;

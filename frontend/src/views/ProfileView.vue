@@ -2,10 +2,8 @@
   import { ref, onMounted } from 'vue'
   import { api } from '../services/api'
   import { useAuthStore } from '../stores/auth.store'
-import { useRouter } from 'vue-router'
 
   const auth = useAuthStore()
-  const router = useRouter()
 
   const country = ref('')
   const password = ref('')
@@ -51,53 +49,57 @@ import { useRouter } from 'vue-router'
     }
   }
 
-  async function logout(){
-    await auth.logout()
-    router.push('/login')
-  }
 </script>
 
 
 <template>
-  <div style="max-width: 600px; margin: 40px auto;">
-    <h1>Profile</h1>
+  <div class="page">
+    <div class="page-header">
+      <h1>Profile</h1>
+    </div>
 
-    <p><b>Email: </b>{{ auth.user.email }}</p>
-    <p><b>Status: </b>{{ auth.user.status }}</p>
-    <p><b>Role: </b>{{ auth.user.role }}</p>
-    <p><b>Country: </b>{{ auth.user.country }}</p>
+    <div class="card section">
+      <p><b>Email: </b>{{ auth.user.email }}</p>
+      <p><b>Status: </b>{{ auth.user.status }}</p>
+      <p><b>Role: </b>{{ auth.user.role }}</p>
+      <p><b>Country: </b>{{ auth.user.country }}</p>
+    </div>
 
-    <hr/>
+    <div class="card section">
+      <div class="field">
+        <label>
+          Country
+          <input v-model="country" placeholder="Country">
+        </label>
+      </div>
 
-    <label>
-      Country
-      <input v-model="country" placeholder="Country">
-    </label>
+      <div class="field">
+        <label>
+          New password
+          <input
+            v-model="password"
+            placeholder="Leave empty to keep current"
+            :type="showPassword ? 'text' : 'password'"
+          />
+        </label>
+        <button
+          class="ghost"
+          @pointerdown="showPassword = true"
+          @pointerup="showPassword = false"
+          @pointerleave="showPassword = false"
+          @pointercancel="showPassword = false"
+          :disabled="loading"
+        >
+          Show
+        </button>
+      </div>
 
-    <label>
-      New password
-      <input 
-        v-model="password"
-        placeholder="Leave empty to keep current"
-        :type="showPassword ? 'text' : 'password'"
-      />
-      <button
-        @pointerdown="showPassword = true"
-        @pointerup="showPassword = false" 
-        @pointerleave="showPassword = false"
-        @pointercancel="showPassword = false"
-        :disabled="loading"
-      >
-      Show
+      <button @click="save" :disabled="loading">
+        {{ loading ? 'Saving...' : 'Save changes' }}
       </button>
-    </label>
 
-    <button @click="save" :disabled="loading">
-      {{ loading ? 'Saving...' : 'Save changes' }}
-    </button>
-
-    <p v-if="message" style="color: green">{{ message }}</p>
-    <p v-if="error" style="color: red">{{ error }}</p>
+      <p v-if="message" class="badge">{{ message }}</p>
+      <p v-if="error" class="error">{{ error }}</p>
+    </div>
   </div>
-  <button @click="logout">Logout</button>
 </template>

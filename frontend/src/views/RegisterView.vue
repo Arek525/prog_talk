@@ -70,10 +70,10 @@
 </script>
 
 <template>
-    <div style="max-width: 360px; margin: 40px auto;">
+    <div class="page auth-card">
         <h1>Register</h1>
 
-        <form @submit.prevent="onSubmit">
+        <form class="form-stack" @submit.prevent="onSubmit">
             <input v-model="email" placeholder="email">
             <input 
                 v-model="password" 
@@ -94,7 +94,7 @@
             </button>
         </form>
 
-        <p v-if="error" style="color: red">
+        <p v-if="error" class="error">
             {{ error }}
         </p>
 

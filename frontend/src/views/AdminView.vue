@@ -96,12 +96,12 @@
 </script>
 
 <template>
-  <div style="max-width: 600px; margin: 40px auto;">
+  <div class="page">
 
     <p v-if="loading">Loading...</p>
     <p v-if="error" style="color: red">{{ error }}</p>
 
-    <section>
+    <section class="card section">
       <h2>Active users</h2>
 
       <input
@@ -113,7 +113,7 @@
       <p v-if="!activeUsers.length">No active users</p>
       <p v-else-if="!filteredActiveUsers.length">No matching users</p>
 
-      <table v-else>
+      <table v-else class="admin-table">
         <thead>
           <tr>
             <th>Email</th>
@@ -127,14 +127,16 @@
             <td>{{ u.email }}</td>
             <td>{{ u.country || '-'}}</td>
             <td>
-              <button @click="ban(u)">Ban</button>
+              <div class="inline-actions">
+                <button @click="ban(u)">Ban</button>
+              </div>
             </td>
           </tr>
         </tbody>
       </table>
     </section>
 
-    <section>
+    <section class="card section">
       <h2>Banned users</h2>
 
       <input
@@ -146,7 +148,7 @@
       <p v-if="!bannedUsers.length">No banned users</p>
       <p v-else-if="!filteredBannedUsers.length">No matching users</p>
 
-      <table v-else>
+      <table v-else class="admin-table">
         <thead>
           <tr>
             <th>Email</th>
@@ -160,14 +162,16 @@
             <td>{{ u.email }}</td>
             <td>{{ u.country || '-'}}</td>
             <td>
-              <button @click="unban(u)">Unban</button>
+              <div class="inline-actions">
+                <button @click="unban(u)">Unban</button>
+              </div>
             </td>
           </tr>
         </tbody>
       </table>
     </section>
 
-    <section>
+    <section class="card section">
       <h2>Pending users</h2>
 
       <input
@@ -179,7 +183,7 @@
       <p v-if="!pendingUsers.length">No pending users</p>
       <p v-else-if="!filteredPendingUsers.length">No matching users</p>
 
-      <table v-else>
+      <table v-else class="admin-table">
       <thead>
         <tr>
           <th>Email</th>
@@ -193,8 +197,10 @@
           <td>{{ u.email }}</td>
           <td>{{ u.country || '-'}}</td>
           <td>
-            <button @click="approve(u)">Approve</button>
-            <button @click="reject(u)">Reject</button>
+            <div class="inline-actions">
+              <button @click="approve(u)">Approve</button>
+              <button class="ghost" @click="reject(u)">Reject</button>
+            </div>
           </td>
         </tr>
       </tbody>

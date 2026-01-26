@@ -1,5 +1,5 @@
 <script setup>
-    import { ref, onMounted, watch, onBeforeUnmount } from 'vue';
+    import { ref, onMounted, watch, onBeforeUnmount, computed } from 'vue';
     import { api } from '../services/api'
     import { useRoute, useRouter } from 'vue-router'
     import TopicCreateForm from '../components/topics/TopicCreateForm.vue';
@@ -20,6 +20,12 @@
 
     const loading = ref(false);
     const error = ref('')
+    const isModPanelOpen = ref(false)
+    const hasModPanel = computed(() => {
+        return !!topic.value
+            && (topic.value.isModerator || auth.user.role === 'ADMIN')
+            && !topic.value.isClosed
+    })
 
     async function load(){
         loading.value = true;
@@ -107,94 +113,106 @@
 </script>
 
 <template>
-    <div style="max-width: 800px; margin: 40px auto;">
-        <p
-            style="cursor: pointer; color: #4f8cff;;"
-            @click="router.push('/forum')"
-        >
-            Back to forum
-        </p>
+    <div :class="['page', { 'topic-layout': hasModPanel }]">
+        <div class="topic-main">
+            <div class="page-header">
+                <p class="crumb" @click="router.push('/forum')">Back to forum</p>
+            </div>
 
-        <p v-if="loading">Loading topic...</p>
-        <p v-if="error" style="color: red;">{{ error }}</p>
+            <p v-if="loading" class="muted">Loading topic...</p>
+            <p v-if="error" class="error">{{ error }}</p>
 
-        <!--content-->
-        <div v-if="topic && !loading">
-            <!--breadcrumbs-->
-            <nav style="margin-bottom: 16px;">
-                <span
-                    v-for="(b, index) in breadcrumbs"
-                    :key="b._id"
-                    style="cursor: pointer; color: #4f8cff;"
-                    @click="router.push(`/topics/${b._id}`)"
-                >
-                    {{ b.title }}
-                    <span v-if="index < breadcrumbs.length - 1">&gt; </span>
-                </span>
-            </nav>
-
-            <!--topic-->
-            <h1>{{ topic.title }}</h1>
-            <p v-if="topic.description"> {{ topic.description }}</p>
-
-            <hr/>
-
-            <TopicCreateForm
-                v-if="topic.isModerator && !topic.isClosed"
-                :parent-id="topic._id"
-                :tags="topic.tags || []"
-            />
-
-            <!--subtopics-->
-            <section>
-                <h3>Subtopics</h3>
-
-                <p v-if="!subtopics.length">
-                    No subtopics yet
-                </p>
-
-                <ul v-else>
-                    <li
-                        v-for="s in subtopics"
-                        :key="s._id"
-                        style="cursor: pointer; padding: 4px 0;"
-                        @click="router.push(`/topics/${s._id}`)"
+            <!--content-->
+            <div v-if="topic && !loading">
+                <!--breadcrumbs-->
+                <nav class="breadcrumbs">
+                    <span
+                        v-for="(b, index) in breadcrumbs"
+                        :key="b._id"
+                        class="crumb"
+                        @click="router.push(`/topics/${b._id}`)"
                     >
-                        <div>
-                            {{ s.title }}
-                            <span v-if="s.isHidden" style="color: #999;"> (hidden)</span>
-                            <span v-if="s.isClosed" style="color: #999;"> (closed)</span>
-                        </div>
-                        <div v-if="auth.isAdmin">
-                            <button @click.stop="hideTopic(s._id)" :disabled="s.isHidden">Hide</button>
-                            <button @click.stop="closeTopic(s._id)" :disabled="s.isClosed">Close</button>
-                        </div>
-                    </li>
-                </ul>
-            </section>
+                        {{ b.title }}
+                        <span v-if="index < breadcrumbs.length - 1">&gt;</span>
+                    </span>
+                </nav>
 
-            <hr/>
+                <!--topic-->
+                <div class="card section">
+                    <h1>{{ topic.title }}</h1>
+                    <p v-if="topic.description" class="muted">{{ topic.description }}</p>
+                </div>
 
-            <!--posts-->
-            <section>
-                <PostList
-                    :topicId="topic._id"
-                />
+                <hr class="divider" />
 
-                <PostCreateForm
-                    v-if="!topic.isUserBlocked && !topic.isClosed"
-                    :topicId="topic._id"
-                    :tags="topic.tags || []"
-                />
-            </section>
+                <div class="card section" v-if="topic.isModerator && !topic.isClosed">
+                    <TopicCreateForm
+                        :parent-id="topic._id"
+                        :tags="topic.tags || []"
+                    />
+                </div>
 
-            <TopicModeratorPanel
-                v-if="(topic.isModerator || auth.user.role === 'ADMIN')
-                    && !topic.isClosed"
-                :topic="topic"
-                :subtopics="subtopics"
-            />
+                <!--subtopics-->
+                <section class="section">
+                    <p class="section-title">Subtopics</p>
 
+                    <p v-if="!subtopics.length" class="muted">
+                        No subtopics yet
+                    </p>
+
+                    <div v-else class="card">
+                        <ul class="list">
+                            <li
+                                v-for="s in subtopics"
+                                :key="s._id"
+                                class="list-item"
+                                @click="router.push(`/topics/${s._id}`)"
+                            >
+                                <div class="list-main">
+                                    <div class="list-title">
+                                        {{ s.title }}
+                                        <span v-if="s.isHidden" class="badge">hidden</span>
+                                        <span v-if="s.isClosed" class="badge">closed</span>
+                                    </div>
+                                </div>
+                                <div v-if="auth.isAdmin" class="list-actions">
+                                    <button class="ghost" @click.stop="hideTopic(s._id)" :disabled="s.isHidden">Hide</button>
+                                    <button class="ghost" @click.stop="closeTopic(s._id)" :disabled="s.isClosed">Close</button>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+
+                <hr class="divider" />
+
+                <!--posts-->
+                <section class="section">
+                    <PostList :topicId="topic._id" />
+
+                    <div class="card section" v-if="!topic.isUserBlocked && !topic.isClosed">
+                        <PostCreateForm
+                            :topicId="topic._id"
+                            :tags="topic.tags || []"
+                        />
+                    </div>
+                </section>
+            </div>
         </div>
+
+        <aside
+            v-if="hasModPanel"
+            class="topic-side"
+        >
+            <button class="ghost" @click="isModPanelOpen = !isModPanelOpen">
+                {{ isModPanelOpen ? 'Hide moderator panel' : 'Show moderator panel' }}
+            </button>
+            <div v-if="isModPanelOpen" class="panel-drawer">
+                <TopicModeratorPanel
+                    :topic="topic"
+                    :subtopics="subtopics"
+                />
+            </div>
+        </aside>
     </div>
 </template>

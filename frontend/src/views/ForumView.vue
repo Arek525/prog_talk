@@ -76,38 +76,48 @@
 </script>
 
 <template>
-    <div style="max-width: 700px; margin: 40px auto;">
-        <h1>Forum</h1>
+    <div class="page">
+        <div class="page-header">
+            <h1>Forum</h1>
+        </div>
 
-        <TopicCreateForm/>
+        <div class="card section">
+            <TopicCreateForm />
+        </div>
 
-        <p v-if="loading">Loading topics...</p>
-        <p v-if="error" style="color: red">{{ error }}</p>
+        <p class="section-title">Topics</p>
 
-        <ul v-if="topics.length">
-            <li
-                v-for="t in topics"
-                :key="t._id"
-                style="cursor: pointer; padding: 8px 0;"
-                @click="openTopic(t._id)"
-            >
-                 <div>
-                    <b>{{ t.title }}</b>
-                    <span v-if="t.isHidden" style="color: #999;"> (hidden)</span>
-                    <span v-if="t.isClosed" style="color: #999;"> (closed)</span>
-                    <p v-if="t.description">{{ t.description }}</p>
-                </div>
-                 <div v-if="auth.isAdmin">
-                        <button @click.stop="hideTopic(t._id)" :disabled="t.isHidden">
+        <p v-if="loading" class="muted">Loading topics...</p>
+        <p v-if="error" class="error">{{ error }}</p>
+
+        <div v-if="topics.length" class="card">
+            <ul class="list">
+                <li
+                    v-for="t in topics"
+                    :key="t._id"
+                    class="list-item"
+                    @click="openTopic(t._id)"
+                >
+                    <div class="list-main">
+                        <div class="list-title">
+                            {{ t.title }}
+                            <span v-if="t.isHidden" class="badge">hidden</span>
+                            <span v-if="t.isClosed" class="badge">closed</span>
+                        </div>
+                        <p v-if="t.description" class="list-meta">{{ t.description }}</p>
+                    </div>
+                    <div v-if="auth.isAdmin" class="list-actions">
+                        <button class="ghost" @click.stop="hideTopic(t._id)" :disabled="t.isHidden">
                             Hide
                         </button>
-                        <button @click.stop="closeTopic(t._id)" :disabled="t.isClosed">
+                        <button class="ghost" @click.stop="closeTopic(t._id)" :disabled="t.isClosed">
                             Close
                         </button>
                     </div>
-            </li>
-        </ul>
-        
-        <p v-else>No topics yet</p>
+                </li>
+            </ul>
+        </div>
+
+        <p v-else class="muted">No topics yet</p>
     </div>
 </template>

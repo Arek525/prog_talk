@@ -162,98 +162,103 @@
 
 <template>
     <section>
-        <h3>Posts</h3>
+        <p class="section-title">Posts</p>
 
-        <p v-if="loading">Loading posts...</p>
-        <p v-if="error" style="color: red;">{{ error }}</p>
+        <p v-if="loading" class="muted">Loading posts...</p>
+        <p v-if="error" class="error">{{ error }}</p>
 
-        <div 
+        <div
             v-for="p in rootPosts"
             :key="p._id"
-            style="margin-bottom: 16px;"
+            class="post"
         >
-            <p v-if="p.deletedAt" style="color: #999;">(deleted)</p>
-            <p :style="p.deletedAt ? 'color:#999;' : ''">{{ p.content }}</p>
+            <p v-if="p.deletedAt" class="muted">(deleted)</p>
+            <p :class="p.deletedAt ? 'muted' : ''">{{ p.content }}</p>
 
-            <p>
-                <span v-for="t in p.tags" :key="t">
-                    #{{ t }}
-                </span>
-            </p>
+            <div v-if="p.tags?.length" class="post-meta">
+                <span v-for="t in p.tags" :key="t" class="tag">#{{ t }}</span>
+            </div>
 
             <pre v-for="s in p.codeSnippets">
                 <code
                     :class="s.language ? `'language-${s.language}` : ''"
-                >
-                    {{ s.code }}
-                </code>
+                    v-text="s.code"
+                ></code>
             </pre>
 
-            <button 
-                v-if="p.authorId === auth.user.id"
-                @click="deletePost(p._id)"
-            >
-                Delete
-            </button>
+            <div class="post-actions">
+                <button
+                    v-if="p.authorId === auth.user.id"
+                    class="ghost"
+                    @click="deletePost(p._id)"
+                >
+                    Delete
+                </button>
 
-            <button
-                @click="toggleLike(p)"
-                :disabled="likeLoading[p._id]"
-            >
-                {{ p.likedByMe ? 'Unlike' : 'Like' }}
-            </button>
+                <button
+                    @click="toggleLike(p)"
+                    :disabled="likeLoading[p._id]"
+                >
+                    {{ p.likedByMe ? 'Unlike' : 'Like' }}
+                </button>
 
-            <span>❤️ {{ p.likesCount }}</span>
+                <span class="badge">❤️ {{ p.likesCount }}</span>
 
-            <button @click="toggleReply(p._id)">Reply</button>
+                <button class="ghost" @click="toggleReply(p._id)">Reply</button>
 
-            <button
-                v-if="repliesByParent[p._id]?.length"
-                @click="toggleReplies(p._id)"
-            >
-                {{ repliesOpen[p._id] ? 'Hide replies' : `Show replies (${repliesByParent[p._id].length})` }}
-            </button>
+                <button
+                    v-if="repliesByParent[p._id]?.length"
+                    class="ghost"
+                    @click="toggleReplies(p._id)"
+                >
+                    {{ repliesOpen[p._id] ? 'Hide replies' : `Show replies (${repliesByParent[p._id].length})` }}
+                </button>
+            </div>
 
-            <div v-if="activeReplyTo === p._id" style="margin: 8px 0;">
+            <div v-if="activeReplyTo === p._id" class="section">
                 <textarea v-model="replyContent" placeholder="Write reply..." />
-                <button @click="submitReply(p._id)">Send</button>
-                <p v-if="replyError" style="color: red;">{{ replyError }}</p>
+                <div class="post-actions">
+                    <button @click="submitReply(p._id)">Send</button>
+                </div>
+                <p v-if="replyError" class="error">{{ replyError }}</p>
             </div>
 
             <div
                 v-if="repliesOpen[p._id]"
-                style="margin-left: 24px; border-left: 2px solid #eee; padding-left: 12px;"
+                class="post-replies"
             >
-                <div v-for="r in repliesByParent[p._id] || []" :key="r._id" style="margin: 8px 0;">
-                    <p v-if="r.deletedAt" style="color: #999;">(deleted)</p>
-                    <p :style="r.deletedAt ? 'color:#999;' : ''">{{ r.content }}</p>
+                <div v-for="r in repliesByParent[p._id] || []" :key="r._id" class="post">
+                    <p v-if="r.deletedAt" class="muted">(deleted)</p>
+                    <p :class="r.deletedAt ? 'muted' : ''">{{ r.content }}</p>
 
-                    <button 
-                        v-if="r.authorId === auth.user.id"
-                        @click="deletePost(r._id)"
-                    >
-                        Delete
-                    </button>
+                    <div class="post-actions">
+                        <button
+                            v-if="r.authorId === auth.user.id"
+                            class="ghost"
+                            @click="deletePost(r._id)"
+                        >
+                            Delete
+                        </button>
 
-                    <button
-                        @click="toggleLike(r)"
-                        :disabled="likeLoading[r._id]"
-                    >
-                        {{ r.likedByMe ? 'Unlike' : 'Like' }}
-                    </button>
+                        <button
+                            @click="toggleLike(r)"
+                            :disabled="likeLoading[r._id]"
+                        >
+                            {{ r.likedByMe ? 'Unlike' : 'Like' }}
+                        </button>
 
-                    <span>❤️ {{ r.likesCount }}</span>
+                        <span class="badge">❤️ {{ r.likesCount }}</span>
+                    </div>
                 </div>
             </div>
-
-
         </div>
 
         <!--pagination-->
-        <div v-if="pages > 1">
+        <div v-if="pages > 1" class="section">
             <button
                 v-for="n in pages"
                 :key="n"
+                class="ghost"
                 @click="page = n; load()"
                 :disabled="page === n"
             >

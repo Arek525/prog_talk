@@ -38,29 +38,3 @@ const onLogout = async () => {
   <RouterView />
   <AdminNotifications v-if="auth.isAdmin" />
 </template>
-
-<style scoped>
-.top-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.brand {
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.nav-links {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.logout {
-  padding: 0.4rem 0.9rem;
-}
-</style>
