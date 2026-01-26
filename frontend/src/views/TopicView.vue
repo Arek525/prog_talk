@@ -182,7 +182,7 @@
                 />
 
                 <PostCreateForm
-                    v-if="!topic.isBlocked && !topic.isClosed"
+                    v-if="!topic.isUserBlocked && !topic.isClosed"
                     :topicId="topic._id"
                     :tags="topic.tags || []"
                 />

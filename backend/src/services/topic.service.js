@@ -137,7 +137,7 @@ async function getTopic(user, topicId){
     ]);
     const topicData = topic.toObject();
     topicData.isModerator = isUserModerator;
-    topicData.isBlocked = userBlocked;
+    topicData.isUserBlocked = userBlocked;
 
     return topicData;
 }

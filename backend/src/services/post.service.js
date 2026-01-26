@@ -31,6 +31,17 @@ async function createPost(userId, topicId, data){
         throw new Error('Invalid tags for this topic');
     }
 
+    let replyTo = null;
+    if(data.replyTo){
+        const parent = await Post.findById(data.replyTo);
+        if(!parent) throw new Error('Parent post not found');
+        if(String(parent.topicId) !== String(topicId)){
+            throw new Error('Invalid reply target');
+        }
+        if(parent.deletedAt) throw new Error('Parent post deleted');
+        replyTo = parent._id;
+    }
+
     const post = await Post.create({
         topicId,
         authorId: userId,
@@ -38,6 +49,7 @@ async function createPost(userId, topicId, data){
         codeSnippets: data.codeSnippets || [],
         tags: data.tags || [],
         references: data.references || [],
+        replyTo
     })
 
     const io = getIO();
@@ -52,20 +64,33 @@ async function listPosts(user, topicId, page, limit){
     const skip = (page - 1) * limit;
     const userId = user._id;
 
-    const filter = { topicId };
+    const basefilter = { topicId };
     if (user.role !== 'ADMIN') {
-        filter.deletedAt = null;
+        basefilter.deletedAt = null;
     }
 
-    const [posts, total] = await Promise.all([
-        Post.find(filter)
+    const topFilter = {...basefilter, replyTo: null};
+
+    const [topPosts, total] = await Promise.all([
+        Post.find(topFilter)
             .sort({createdAt: 1})
             .skip(skip)
             .limit(limit),
-        Post.countDocuments(filter)
+        Post.countDocuments(topFilter)
     ]);
 
-    const postIds = posts.map(p => p._id);
+    const topIds = topPosts.map(p => p._id);
+
+    const replies = topIds.length
+        ? await Post.find({
+            ...basefilter,
+            replyTo: {$in: topIds}
+        }).sort({createdAt: 1})
+        : [];
+
+    const allPosts = [...topPosts, ...replies];
+
+    const postIds = allPosts.map(p => p._id);
 
     const likes = await Like.find({
         postId: { $in: postIds }
@@ -79,7 +104,7 @@ async function listPosts(user, topicId, page, limit){
         likesByPost[pid].users.push(String(l.userId));
     }
 
-    const items = posts.map(p => {
+    const items = allPosts.map(p => {
         const id = String(p._id);
         const data = p.toObject();
         const like = likesByPost[id];

@@ -16,6 +16,12 @@ const PostSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    replyTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Post',
+      default: null,
+      index: true,
+    },
     authorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

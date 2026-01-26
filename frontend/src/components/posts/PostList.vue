@@ -1,5 +1,5 @@
 <script setup>
-    import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
+    import { ref, watch, nextTick, onMounted, onBeforeUnmount, computed } from 'vue';
     import { api } from '../../services/api';
     import { useAuthStore } from '../../stores/auth.store';
     import hljs from 'highlight.js';
@@ -27,6 +27,26 @@
     const posts = ref([]);
     const page = ref(1);
     const pages = ref(1);
+
+    const activeReplyTo = ref(null);
+    const replyContent = ref('');
+    const replyError = ref('');
+    const repliesOpen = ref({});
+
+    const rootPosts = computed(() => posts.value.filter(p => !p.replyTo));
+
+    const repliesByParent = computed(() => {
+        const map = {};
+        for(const p of posts.value){
+            if(p.replyTo){
+                const id = String(p.replyTo);
+                if(!map[id]) map[id] = [];
+                map[id].push(p);
+            }
+        }
+
+        return map;
+    })
 
 
     async function load(){
@@ -82,6 +102,41 @@
         }
     }
 
+    function toggleReply(postId){
+        if(activeReplyTo.value === postId){
+            activeReplyTo.value = null;
+            replyContent.value = '';
+        } else{
+            activeReplyTo.value = postId;
+            replyContent.value = '';
+        }
+    }
+
+    function toggleReplies(postId){
+        repliesOpen.value[postId] = !repliesOpen.value[postId];
+    }
+
+    async function submitReply(parentId){
+        replyError.value = '';
+        const content = replyContent.value.trim();
+        if(!content){
+            replyError.value = 'Reply is required';
+            return;
+        }
+
+        try {
+            await api.post(`/topics/${props.topicId}/posts`, {
+                content,
+                replyTo: parentId,
+            });
+            activeReplyTo.value = null;
+            replyContent.value = '';
+            load();
+        } catch (e) {
+            replyError.value = e?.response?.data?.error || 'Cannot create reply';
+        }
+    }
+
     function subscribe(){
         socket.on('post:changed', load)
     }
@@ -94,7 +149,7 @@
     watch(() => props.topicId, () => {
         page.value = 1;
         load();
-    }, {immediate: true}) //so no need for onMounted
+    }, {immediate: true})
 
     onMounted(() => {
         subscribe()
@@ -113,7 +168,7 @@
         <p v-if="error" style="color: red;">{{ error }}</p>
 
         <div 
-            v-for="p in posts"
+            v-for="p in rootPosts"
             :key="p._id"
             style="margin-bottom: 16px;"
         >
@@ -149,6 +204,49 @@
             </button>
 
             <span>❤️ {{ p.likesCount }}</span>
+
+            <button @click="toggleReply(p._id)">Reply</button>
+
+            <button
+                v-if="repliesByParent[p._id]?.length"
+                @click="toggleReplies(p._id)"
+            >
+                {{ repliesOpen[p._id] ? 'Hide replies' : `Show replies (${repliesByParent[p._id].length})` }}
+            </button>
+
+            <div v-if="activeReplyTo === p._id" style="margin: 8px 0;">
+                <textarea v-model="replyContent" placeholder="Write reply..." />
+                <button @click="submitReply(p._id)">Send</button>
+                <p v-if="replyError" style="color: red;">{{ replyError }}</p>
+            </div>
+
+            <div
+                v-if="repliesOpen[p._id]"
+                style="margin-left: 24px; border-left: 2px solid #eee; padding-left: 12px;"
+            >
+                <div v-for="r in repliesByParent[p._id] || []" :key="r._id" style="margin: 8px 0;">
+                    <p v-if="r.deletedAt" style="color: #999;">(deleted)</p>
+                    <p :style="r.deletedAt ? 'color:#999;' : ''">{{ r.content }}</p>
+
+                    <button 
+                        v-if="r.authorId === auth.user.id"
+                        @click="deletePost(r._id)"
+                    >
+                        Delete
+                    </button>
+
+                    <button
+                        @click="toggleLike(r)"
+                        :disabled="likeLoading[r._id]"
+                    >
+                        {{ r.likedByMe ? 'Unlike' : 'Like' }}
+                    </button>
+
+                    <span>❤️ {{ r.likesCount }}</span>
+                </div>
+            </div>
+
+
         </div>
 
         <!--pagination-->
