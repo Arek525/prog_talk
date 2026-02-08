@@ -31,7 +31,7 @@ async function getBannedUsers(req, res){
 
 async function getActiveUsers(req, res){
     try{
-        const users = await adminService.listActiveUsers(req.query.search || '');
+        const users = await adminService.listActiveUsers();
         res.json(users);
     } catch(err){
         res.status(400).json({error: err.message})
