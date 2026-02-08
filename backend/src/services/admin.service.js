@@ -108,9 +108,9 @@ async function unbanUser(userId){
 
 async function closeTopic(topicId) {
     const topic = await Topic.findById(topicId);
+    if (!topic) throw new Error('Topic not found');
 
     if(topic.isClosed) throw new Error('Topic already closed');
-    if (!topic) throw new Error('Topic not found');
 
     topic.isClosed = true;
     await topic.save();
