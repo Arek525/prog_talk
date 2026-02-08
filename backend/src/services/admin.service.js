@@ -7,16 +7,59 @@ function safeGetIO() {
   try { return getIO(); } catch (e) { return null; }
 }
 
+function emitAdminsUsersChanged() {
+    const io = safeGetIO();
+    if (io) io.to('admins').emit('users:changed');
+}
+
+function emitAdminsNotificationsChanged() {
+    const io = safeGetIO();
+    if (io) io.to('admins').emit('notifications:changed');
+}
+
+function emitUserApproved(userId) {
+    const io = safeGetIO();
+    if (io) {
+        io.to(`user:${userId}`).emit('user:approved:self', {
+            message: 'Your account has been approved'
+        });
+    }
+}
+
+function emitUserRejected(userId) {
+    const io = safeGetIO();
+    if (io) {
+        io.to(`user:${userId}`).emit('user:rejected:self', {
+            message: 'Your registration has been rejected'
+        });
+    }
+}
+
+function emitTopicChanged(topic) {
+    const io = safeGetIO();
+    if (!io || !topic) return;
+
+    io.to(String(topic._id)).emit('topic:changed');
+
+    if (topic.parentId) {
+        io.to(String(topic.parentId)).emit('topic:changed');
+    }
+
+    if (topic.parentId == null) {
+        io.to('forum').emit('forum:changed');
+    }
+}
+
 async function listPendingUsers() {
-    return User.find({ status: 'PENDING' });
+    return User.find({ status: 'PENDING' }).sort({ createdAt: -1 });
 }
 
 async function listBannedUsers(){
-    return User.find({status: 'BANNED'});
+    return User.find({status: 'BANNED'}).sort({ createdAt: -1 });
 }
 
 async function listActiveUsers(){
-    return User.find({status: 'ACTIVE'});
+    return User.find({status: 'ACTIVE'}).sort({ createdAt: -1 });
 }
 
 async function approveUser(userId, adminUser) {
@@ -36,15 +79,9 @@ async function approveUser(userId, adminUser) {
     });
 
 
-    const io = safeGetIO();
-    if(io){
-        io.to('admins').emit('notifications:changed');
-        io.to('admins').emit('users:changed');
-
-        io.to(`user:${user._id}`).emit('user:approved:self', {
-            message: 'Your account has been approved'
-        });
-    }
+    emitAdminsNotificationsChanged();
+    emitAdminsUsersChanged();
+    emitUserApproved(user._id);
 
 }
 
@@ -65,15 +102,9 @@ async function rejectUser(userId, adminUser){
 });
 
 
-    const io = safeGetIO();
-    if(io){
-        io.to('admins').emit('notifications:changed');
-        io.to('admins').emit('users:changed');
-
-        io.to(`user:${user._id}`).emit('user:rejected:self', {
-            message: 'Your registration has been rejected'
-        });
-    }
+    emitAdminsNotificationsChanged();
+    emitAdminsUsersChanged();
+    emitUserRejected(user._id);
 }
 
 async function banUser(targetUserId, userId) {
@@ -87,8 +118,7 @@ async function banUser(targetUserId, userId) {
     targetUser.status = 'BANNED';
     await targetUser.save();
 
-    const io = safeGetIO();
-    if (io) io.to('admins').emit('users:changed');
+    emitAdminsUsersChanged();
 }
 
 async function unbanUser(userId){
@@ -102,8 +132,7 @@ async function unbanUser(userId){
     user.status = 'ACTIVE';
     await user.save();
 
-    const io = safeGetIO();
-    if (io) io.to('admins').emit('users:changed');
+    emitAdminsUsersChanged();
 } 
 
 async function closeTopic(topicId) {
@@ -115,29 +144,18 @@ async function closeTopic(topicId) {
     topic.isClosed = true;
     await topic.save();
 
-    const io = safeGetIO();
-    if(io && topic.parentId === null) io.to('forum').emit('forum:changed'); 
-    if (io) {
-        io.to(String(topicId)).emit('topic:changed');
-        if (topic.parentId) io.to(String(topic.parentId)).emit('topic:changed');
-    }
+    emitTopicChanged(topic);
 }
 
 async function hideTopic(topicId) {
     const topic = await Topic.findById(topicId);
-
-    if(topic.isHidden) throw new Error('Topic already hidden');
     if (!topic) throw new Error('Topic not found');
+    if(topic.isHidden) throw new Error('Topic already hidden');
 
     topic.isHidden = true;
     await topic.save();
 
-    const io = safeGetIO();
-    if (io) {
-        io.to(String(topicId)).emit('topic:changed');
-        if (topic.parentId) io.to(String(topic.parentId)).emit('topic:changed');
-        if (topic.parentId === null) io.to('forum').emit('forum:changed');
-    }
+    emitTopicChanged(topic);
 }
 
 module.exports = {

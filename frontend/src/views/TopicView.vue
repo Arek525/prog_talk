@@ -174,6 +174,7 @@
                                         <span v-if="s.isHidden" class="badge">hidden</span>
                                         <span v-if="s.isClosed" class="badge">closed</span>
                                     </div>
+                                    <p v-if="s.description" class="list-meta">{{ s.description }}</p>
                                 </div>
                                 <div v-if="auth.isAdmin" class="list-actions">
                                     <button class="ghost" @click.stop="hideTopic(s._id)" :disabled="s.isHidden">Hide</button>

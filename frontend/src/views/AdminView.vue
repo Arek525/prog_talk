@@ -32,9 +32,9 @@
     return pendingUsers.value.filter(u => u.email.toLowerCase().includes(q));
   })
 
-  async function load(){
-    loading.value = true
-    error.value = ''
+  async function load(silent = true){
+    if(!silent) loading.value = true;
+    error.value = '';
 
     try{
       const [pendingRes, bannedRes, activeRes] = await Promise.all([
@@ -43,13 +43,13 @@
         api.get('/admin/users/active')
       ])
 
-      pendingUsers.value = pendingRes.data.reverse();
-      bannedUsers.value = bannedRes.data.reverse();
-      activeUsers.value = activeRes.data.reverse();
+      pendingUsers.value = pendingRes.data;
+      bannedUsers.value = bannedRes.data;
+      activeUsers.value = activeRes.data;
     } catch(e){
       error.value = 'Failed to load users'
     } finally{
-      loading.value = false
+      if (!silent) loading.value = false
     }
   }
 

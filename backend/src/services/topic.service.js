@@ -12,6 +12,28 @@ function safeGetIO() {
     }
 }
 
+function emitForumChanged() {
+    const io = safeGetIO();
+    if (io) io.to('forum').emit('forum:changed');
+}
+
+function emitTopicChanged(topicId) {
+    const io = safeGetIO();
+    if (io) io.to(String(topicId)).emit('topic:changed');
+}
+
+function emitTopicBranchChanged(topic) {
+    if (!topic) return;
+
+    if (topic.parentId === null) {
+        emitForumChanged();
+    } else {
+        emitTopicChanged(topic.parentId);
+    }
+
+    emitTopicChanged(topic._id);
+}
+
 async function createRootTopic(userId, {title, description, tags = []}){
     if(!title) throw new Error('Title required');
 
@@ -32,8 +54,7 @@ async function createRootTopic(userId, {title, description, tags = []}){
         promotedBy: userId
     });
 
-    const io = safeGetIO();
-    if(io) io.to('forum').emit('forum:changed');
+    emitForumChanged();
 
     return topic;
 }
@@ -65,8 +86,7 @@ async function createSubtopic(userId, parentId, {title, description, tags = []})
 
     await topic.save();
 
-    const io = safeGetIO();
-    if (io) io.to(String(parentId)).emit('topic:changed');
+    emitTopicChanged(parentId);
 
     return topic;
 }
@@ -100,14 +120,7 @@ async function updateTopic(userId, topicId, data) {
         { new: true }
     );
 
-    const io = safeGetIO();
-    if(topic.parentId === null){
-        if(io) io.to('forum').emit('forum:changed');
-    } else{
-        if (io) io.to(String(topic.parentId)).emit('topic:changed');
-    }
-
-    if (io) io.to(String(topicId)).emit('topic:changed');
+    emitTopicBranchChanged(topic);
 
     return updatedTopic;
 }
