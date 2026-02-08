@@ -10,18 +10,23 @@
     const router = useRouter();
     const auth = useAuthStore();
 
+    const LIMIT = 10;
+    const page = ref(1);
+    const pages = ref(1);
+
 
     const loading = ref(false);
     const error = ref();
     const topics = ref([]);
 
-    async function loadTopics(){
-        loading.value = true;
+    async function loadTopics(silent = true){
+        if(!silent) loading.value = true;
         error.value = '';
 
         try{
-            const res = await api.get('/topics')
-            topics.value = res.data.reverse();
+            const res = await api.get('/topics', {params: {page: page.value, limit: LIMIT}});
+            topics.value = res.data.items;
+            pages.value = res.data.pages;
         } catch(e){
             error.value = 'Failed to load topics'
         } finally{
@@ -62,7 +67,7 @@
     }
 
     onMounted(() => {
-        loadTopics();
+        loadTopics(false);
         subscribe()
         socket.on('connect', onConnect)
         socket.emit('forum:join')
@@ -116,6 +121,17 @@
                     </div>
                 </li>
             </ul>
+            <div v-if="pages > 1" class="section">
+                <button
+                    v-for="n in pages"
+                    :key="n"
+                    class="ghost"
+                    @click="page = n; loadTopics(false)"
+                    :disabled="page === n"
+                >
+                    {{ n }}
+                </button>
+            </div>
         </div>
 
         <p v-else class="muted">No topics yet</p>

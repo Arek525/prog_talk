@@ -113,14 +113,23 @@ async function updateTopic(userId, topicId, data) {
 }
 
 
-async function getRootTopics(user){
+async function getRootTopics(user, page = 1, limit = 10){
     const filter = { parentId: null };
 
     if (user.role !== 'ADMIN') {
         filter.isHidden = false;
     }
 
-    return Topic.find(filter);
+    const skip = (page - 1) * limit;
+    const [items, total] = await Promise.all([
+        Topic.find(filter).sort({createdAt: -1}).skip(skip).limit(limit),
+        Topic.countDocuments(filter)
+    ]);
+
+    return {
+        items,
+        pages: Math.ceil(total / limit)
+    }
 }
 
 async function getTopic(user, topicId){
