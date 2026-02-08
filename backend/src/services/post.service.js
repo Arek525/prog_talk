@@ -38,11 +38,14 @@ async function createPost(userId, topicId, data){
 
     let replyTo = null;
     if(data.replyTo){
+
         const parent = await Post.findById(data.replyTo);
         if(!parent) throw new Error('Parent post not found');
+
         if(String(parent.topicId) !== String(topicId)){
             throw new Error('Invalid reply target');
         }
+
         if(parent.deletedAt) throw new Error('Parent post deleted');
         replyTo = parent._id;
     }
@@ -51,9 +54,7 @@ async function createPost(userId, topicId, data){
         topicId,
         authorId: userId,
         content: data.content,
-        codeSnippets: data.codeSnippets || [],
         tags: data.tags || [],
-        references: data.references || [],
         replyTo
     })
 

@@ -1,13 +1,5 @@
 const mongoose = require('mongoose');
 
-const CodeSnippetSchema = new mongoose.Schema(
-  {
-    language: String,
-    code: String,
-  },
-  { _id: false }
-);
-
 const PostSchema = new mongoose.Schema(
   {
     topicId: {
@@ -35,13 +27,6 @@ const PostSchema = new mongoose.Schema(
       type: [String],
       default: []
     },
-    codeSnippets: [CodeSnippetSchema],
-    references: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Post',
-      },
-    ],
     deletedAt: {
       type: Date,
       default: null,

@@ -4,6 +4,19 @@
     import { useAuthStore } from '../../stores/auth.store';
     import hljs from 'highlight.js';
     import { socket } from '../../services/socket'
+    import MarkdownIt from 'markdown-it'
+    import DOMPurify from 'dompurify'
+
+    const md = new MarkdownIt({
+        html: false,
+        linkify: true,
+        breaks: true
+    })
+
+    function renderMarkdown(text = '') {
+        return DOMPurify.sanitize(md.render(text))
+    }
+
 
     const props = defineProps({
         topicId: {
@@ -165,18 +178,11 @@
             class="post"
         >
             <p v-if="p.deletedAt" class="muted">(deleted)</p>
-            <p :class="p.deletedAt ? 'muted' : ''">{{ p.content }}</p>
+            <div :class="p.deletedAt ? 'muted' : ''" v-html="renderMarkdown(p.content)"/>
 
             <div v-if="p.tags?.length" class="post-meta">
                 <span v-for="t in p.tags" :key="t" class="tag">#{{ t }}</span>
             </div>
-
-            <pre v-for="s in p.codeSnippets">
-                <code
-                    :class="s.language ? `'language-${s.language}` : ''"
-                    v-text="s.code"
-                ></code>
-            </pre>
 
             <div class="post-actions">
                 <button
@@ -221,7 +227,7 @@
             >
                 <div v-for="r in repliesByParent[p._id] || []" :key="r._id" class="post">
                     <p v-if="r.deletedAt" class="muted">(deleted)</p>
-                    <p :class="r.deletedAt ? 'muted' : ''">{{ r.content }}</p>
+                    <div :class="r.deletedAt ? 'muted' : ''" v-html="renderMarkdown(r.content)"/>
 
                     <div class="post-actions">
                         <button
@@ -245,7 +251,6 @@
             </div>
         </div>
 
-        <!--pagination-->
         <div v-if="pages > 1" class="section">
             <button
                 v-for="n in pages"

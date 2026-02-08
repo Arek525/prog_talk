@@ -16,8 +16,6 @@
     const loading = ref(false);
     const error = ref('');
     const content = ref('');
-    const code = ref('');
-    const language = ref('');
     const selectedTags = ref([]);
 
     async function submit(){
@@ -33,15 +31,10 @@
         try{
             await api.post(`/topics/${props.topicId}/posts`, {
                 content: content.value,
-                tags: selectedTags.value,
-                codeSnippets: code.value
-                ? [{language: language.value, code: code.value}]
-                : [],
+                tags: selectedTags.value
             });
 
             content.value = '';
-            code.value = '';
-            language.value = '';
             selectedTags.value = [];
         } catch(e){
             error.value = e?.response?.data?.error ||
@@ -58,23 +51,32 @@
     <form class="form-stack" @submit.prevent="submit">
         <textarea
             v-model="content"
-            placeholder="Write your post..."
+            placeholder="Write your post in Markdown..."
         />
+        <p class="muted">Code block: <code>```js ... ```</code></p>
+        <p class="muted">Language shortcuts: js, ts, py, cpp, java, cs, go, rs, php, sql, bash, json, html, css, vue, yaml, xml, md</p>
 
-        <textarea
-            v-model="code"
-            placeholder="Code snippet (optional)"
-        />
+        <details class="muted">
+            <summary>Example post</summary>
+            <pre><code>
+                I have a parsing issue.
 
-        <div v-if="code.length" class="field">
-            <label>Language</label>
-            <select v-model="language">
-                <option disabled value="">Select language</option>
-                <option value="js">JavaScript</option>
-                <option value="python">Python</option>
-                <option value="cpp">C++</option>
-            </select>
-        </div>
+                ```js
+                const raw = '{"name":"Ala"}'
+                const data = JSON.parse(raw)
+                console.log(data.name)
+                ```
+                Then I also tried Python:
+                
+                ```py
+                import json
+                data = json.loads(raw)
+                print(data["name"])
+                ```
+                Any suggestions?
+            </code></pre>
+        </details>
+
 
         <div v-if="props.tags.length" class="tag-picker">
             <label class="tag-option" v-for="t in props.tags" :key="t">
