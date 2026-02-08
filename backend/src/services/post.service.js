@@ -4,6 +4,11 @@ const Topic = require('../models/Topic.model');
 const {isUserBlocked} = require('./permissions.service');
 const { getIO } = require('../socket/io');
 
+function emitPostChanged(topicId){
+    const io = getIO();
+    if(io) io.to(String(topicId)).emit('post:changed');
+}
+
 
 async function createPost(userId, topicId, data){
     const topic = await Topic.findById(topicId); 
@@ -52,10 +57,7 @@ async function createPost(userId, topicId, data){
         replyTo
     })
 
-    const io = getIO();
-    if(io){
-        io.to(String(topicId)).emit('post:changed', post);
-    }
+    emitPostChanged(topicId);
 
     return post;
 }
@@ -144,10 +146,7 @@ async function deletePost(userId, postId){
     post.deletedAt = new Date();
     await post.save();
 
-    const io = getIO();
-    if(io){
-        io.to(String(post.topicId)).emit('post:changed');
-    }
+    emitPostChanged(post.topicId);
 }
 
 async function likePost(userId, postId){
@@ -163,8 +162,8 @@ async function likePost(userId, postId){
     const post = await Post.findById(postId);
     if(!post) return;
 
-    const io = getIO();
-    io.to(String(post.topicId)).emit('post:changed')
+    emitPostChanged(post.topicId);
+
 }
 
 async function unlikePost(userId, postId){
@@ -176,10 +175,7 @@ async function unlikePost(userId, postId){
     const post = await Post.findById(postId);
     if(!post) return;
 
-    const io = getIO();
-    if(io){
-        io.to(String(post.topicId)).emit('post:changed');
-    }
+    emitPostChanged(post.topicId);
 }
 
 module.exports = {

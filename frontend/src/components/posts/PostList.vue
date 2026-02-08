@@ -23,6 +23,7 @@
     const loading = ref(false);
     const likeLoading = ref({});
     const error = ref('');
+    
 
     const posts = ref([]);
     const page = ref(1);
@@ -48,29 +49,30 @@
         return map;
     })
 
+    function onPostEvent() {
+        load({ silent: true })
+    }
 
-    async function load(){
-        loading.value = true;
 
-        try{
+    async function load({ silent = false } = {}) {
+        if (!silent) loading.value = true
+        try {
             const res = await api.get(`/topics/${props.topicId}/posts`, {
-                params: {page: page.value, limit: 10}
-            });
-
-            posts.value = res.data.items;
-            pages.value = res.data.pages;
-            await highlightCode();
-        } catch(e){
-            error.value = 'Failed to load posts';
-        } finally{
-            loading.value = false;
+                params: { page: page.value, limit: 10 }
+            })
+            posts.value = res.data.items
+            pages.value = res.data.pages
+            await highlightCode()
+        } catch (e) {
+            error.value = 'Failed to load posts'
+        } finally {
+            if (!silent) loading.value = false
         }
     }
 
     async function deletePost(postId){
         try{
             await api.delete(`/posts/${postId}`);
-            load();
         } catch(e){
             alert(e?.response?.data?.error 
             || 'Cannot delete this post');
@@ -85,15 +87,9 @@
         try{
             if(post.likedByMe){
                 await api.delete(`/posts/${id}/like`);
-                post.likedByMe = false;
-                post.likesCount = Math.max(0, (post.likesCount || 0) - 1);
-                load();
             }
             else{
                 await api.post(`/posts/${id}/like`);
-                post.likedByMe = true;
-                post.likesCount = (post.likesCount || 0) + 1;
-                load();
             }
         } catch(e){
             error.value = e?.response?.data?.error || 'Cannot like post';
@@ -131,18 +127,17 @@
             });
             activeReplyTo.value = null;
             replyContent.value = '';
-            load();
         } catch (e) {
             replyError.value = e?.response?.data?.error || 'Cannot create reply';
         }
     }
 
     function subscribe(){
-        socket.on('post:changed', load)
+        socket.on('post:changed', onPostEvent)
     }
 
     function unsubscribe(){
-        socket.off('post:changed', load)
+        socket.off('post:changed', onPostEvent)
     }
 
 
@@ -164,7 +159,7 @@
     <section>
         <p class="section-title">Posts</p>
 
-        <p v-if="loading" class="muted">Loading posts...</p>
+        <p v-if="loading && posts.length === 0" class="muted">Loading posts...</p>
         <p v-if="error" class="error">{{ error }}</p>
 
         <div
