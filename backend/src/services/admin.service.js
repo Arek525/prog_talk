@@ -31,6 +31,13 @@ function emitUserRejected(userId) {
     }
 }
 
+function emitUserBanned(userId){
+    const io = safeGetIO();
+    if(io){
+        io.to(`user:${userId}`).emit('user:banned:self')
+    }
+}
+
 function emitUserUnbanned(userId){
     const io = safeGetIO();
     if(io){
@@ -122,6 +129,7 @@ async function banUser(targetUserId, userId) {
     await targetUser.save();
 
     emitAdminsUsersChanged();
+    emitUserBanned(targetUserId);
 }
 
 async function unbanUser(userId){

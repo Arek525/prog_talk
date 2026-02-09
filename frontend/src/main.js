@@ -17,6 +17,20 @@ createApp(App)
 
 const auth = useAuthStore(pinia);
 
+socket.on('user:banned:self', async () => {
+  await auth.fetchMe();
+  if(router.currentRoute.value.path !== '/banned'){
+    router.push('/banned');
+  }
+});
+
+socket.on('user:unbanned:self', async () => {
+  await auth.fetchMe();
+  if (auth.isActive && router.currentRoute.value.path === '/banned') {
+    router.push('/forum');
+  }
+});
+
 api.interceptors.response.use(
   (res) => res,
   (err) => {
