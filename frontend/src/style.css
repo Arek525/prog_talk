@@ -402,8 +402,6 @@ label {
 }
 
 .topic-side {
-  position: sticky;
-  top: 92px;
   align-self: start;
   display: flex;
   flex-direction: column;
