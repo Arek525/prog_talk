@@ -8,6 +8,7 @@ module.exports = function registerHandlers(io, socket){
     }
 
     socket.join(`user:${user._id}`);
+    if (user.status === 'BANNED') return;
 
     socket.on('forum:join', () => {
         socket.join('forum');
@@ -20,22 +21,20 @@ module.exports = function registerHandlers(io, socket){
     socket.on('topic:join', async ({topicId}) => {
         try{
             const topic = await Topic.findById(topicId);
-            if(!topic) return socket.emit('error', {message: 'Topic not found'});
+            if(!topic) return;
 
             if(topic.isHidden && socket.user.role !== 'ADMIN'){
-                return socket.emit('error', {message: 'Forbidden'});
+                return;
             }
 
             await socket.join(String(topicId));
-            socket.emit('topic:joined', {topicId});
 
         } catch(err){
-            socket.emit('topic:join:error', {message: 'Join failed'})
+            console.error('topic:join failed', err)
         }
     });
 
     socket.on('topic:leave', async({topicId}) => {
         await socket.leave(String(topicId));
-        socket.emit('topic:left', {topicId});
     });
 };
