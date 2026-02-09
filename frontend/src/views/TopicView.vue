@@ -27,8 +27,8 @@
             && !topic.value.isClosed
     })
 
-    async function load(){
-        loading.value = true;
+    async function load(silent = true){
+        if(!silent) loading.value = true;
         error.value = '';
 
         try{
@@ -50,14 +50,13 @@
             breadcrumbs.value = [];
             subtopics.value = [];
         } finally{
-            loading.value = false;
+            if(!silent) loading.value = false;
         }
     }
 
     async function hideTopic(id){
         try{
             await api.post(`/admin/topics/${id}/hide`);
-            await load();
         } catch(e){
             error.value = e?.response?.data?.error || 'Failed to hide topic'
         }
@@ -66,7 +65,6 @@
     async function closeTopic(id){
         try{
             await api.post(`/admin/topics/${id}/close`)
-            await load();
         } catch(e){
             error.value = e?.response?.data?.error || 'Failed to close topic'
         }
@@ -94,12 +92,12 @@
     //react when parameter in URL changes
     watch(() => route.params.id, (newId, oldId) => {
         if (oldId) leaveTopic(oldId);
-        load();
+        load(false);
         joinTopic(newId);
     })
 
     onMounted(() => {
-        load();
+        load(false);
         subscribe();
         socket.on('connect', onConnect)
         joinTopic(route.params.id);
