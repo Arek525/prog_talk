@@ -1,11 +1,12 @@
 <script setup>
-    import { ref, onMounted, computed } from 'vue';
+    import { ref, onMounted, computed, watch } from 'vue';
     import { api } from '../../services/api';
     import { useAuthStore } from '../../stores/auth.store';
 
     const props = defineProps({
         topic: Object,
-        subtopics: Array
+        subtopics: Array,
+        refreshTick: Number
     });
 
     const emit = defineEmits(['topic-updated']);
@@ -70,6 +71,11 @@
     const usersToModerate = computed(() =>
         users.value.filter(u => !moderatorsIds.value.includes(u._id))
     )
+
+    watch(() => props.refreshTick, async () => {
+        await loadModerators();
+        await loadBlocked();
+    })
 
 
 

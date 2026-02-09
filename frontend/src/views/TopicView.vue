@@ -17,6 +17,7 @@
     const topic = ref(null);
     const subtopics = ref([]);
     const breadcrumbs = ref([]);
+    const refreshTick = ref(0);
 
     const loading = ref(false);
     const error = ref('')
@@ -70,12 +71,18 @@
         }
     }
 
+    const onPermissionsChanged = async () => {
+        await load(true); //refreshing topic + hasModPanel
+        refreshTick.value += 1; //so that ModPanel reloads blocks and mods
+    }
     function subscribe(){
-        socket.on('topic:changed', load)
+        socket.on('topic:changed', load);
+        socket.on('topic:permissions:changed', onPermissionsChanged)
     }
 
     function unsubscribe(){
-        socket.off('topic:changed', load)
+        socket.off('topic:changed', load);
+        socket.off('topic:permissions:changed', onPermissionsChanged)
     }
 
     function joinTopic(id){
@@ -210,6 +217,7 @@
                 <TopicModeratorPanel
                     :topic="topic"
                     :subtopics="subtopics"
+                    :refreshTick
                 />
             </div>
         </aside>

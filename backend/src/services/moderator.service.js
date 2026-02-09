@@ -2,6 +2,7 @@ const TopicModerator = require('../models/TopicModerator.model');
 const TopicBlock = require('../models/TopicBlock.model');
 const Topic = require('../models/Topic.model');
 const User = require('../models/User.model');
+const { getIO } = require('../socket/io');
 
 const {
   isModerator,
@@ -9,6 +10,16 @@ const {
   isTopicFounderInBranch,
 } = require('./permissions.service');
 
+function safeGetIO() {
+    try { return getIO(); } catch (e) { return null; }
+}
+
+function emitPermissionsChanged(topicId){
+    const io = safeGetIO();
+    if(io){
+        io.to(String(topicId)).emit('topic:permissions:changed');
+    }
+}
 
 async function addModerator(userId, topicId, targetUserId){
     const user = await User.findById(userId);
@@ -47,6 +58,8 @@ async function addModerator(userId, topicId, targetUserId){
         userId: targetUserId,
         promotedBy: userId
     });
+
+    emitPermissionsChanged(topicId);
 }
 
 async function removeModerator(userId, topicId, targetUserId){
@@ -93,6 +106,8 @@ async function removeModerator(userId, topicId, targetUserId){
         topicId,
         userId: targetUserId
     })
+
+    emitPermissionsChanged(topicId);
 }
 
 async function blockUser(userId, topicId, targetUserId, exceptions = [], reason){
@@ -141,6 +156,8 @@ async function blockUser(userId, topicId, targetUserId, exceptions = [], reason)
         createdByModeratorId: userId,
         reason,
     });
+
+    emitPermissionsChanged(topicId);
 }
 
 async function unblockUser(userId, topicId, targetUserId) {
@@ -176,6 +193,8 @@ async function unblockUser(userId, topicId, targetUserId) {
         topicId,
         userId: targetUserId,
     });
+
+    emitPermissionsChanged(topicId);
 }
 
 module.exports = {
