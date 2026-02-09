@@ -60,16 +60,23 @@ function emitTopicChanged(topic) {
     }
 }
 
-async function listPendingUsers() {
-    return User.find({ status: 'PENDING' }).sort({ createdAt: -1 });
+function escapeRegex(text = '') {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-async function listBannedUsers(){
-    return User.find({status: 'BANNED'}).sort({ createdAt: -1 });
-}
+async function listUsers(status = 'ACTIVE', query = ''){
+    if(!['ACTIVE', 'BANNED', 'PENDING'].includes(status)){
+        throw new Error('Given status does not exist');
+    }
 
-async function listActiveUsers(){
-    return User.find({status: 'ACTIVE'}).sort({ createdAt: -1 });
+    const q = String(query).trim()
+
+    const filter = {status};
+    if(q){
+        filter.email = {$regex: escapeRegex(q), $options: 'i'}
+    }
+
+    return User.find(filter).sort({createdAt: -1});
 }
 
 async function approveUser(userId, adminUser) {
@@ -171,13 +178,11 @@ async function hideTopic(topicId) {
 }
 
 module.exports = {
-    listPendingUsers,
-    listBannedUsers,
+    listUsers,
     unbanUser,
     approveUser,
     rejectUser,
     banUser,
     closeTopic,
-    hideTopic,
-    listActiveUsers
+    hideTopic
 };

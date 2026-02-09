@@ -6,9 +6,7 @@ const {requireActive, requireAdmin}  = require('../middleware/auth.middleware');
 
 router.use(requireActive, requireAdmin);
 
-router.get('/users/pending', adminController.getPendingUsers);
-router.get('/users/banned', adminController.getBannedUsers);
-router.get('/users/active', adminController.getActiveUsers);
+router.get('/users', adminController.getUsers);
 router.post('/users/:id/approve', adminController.approveUser);
 router.post('/users/:id/reject', adminController.rejectUser);
 router.post('/users/:id/ban', adminController.banUser);

@@ -1,57 +1,69 @@
 <script setup>
-  import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
+  import { ref, onMounted, onBeforeUnmount } from 'vue';
   import { api } from '../services/api';
   import { socket } from '../services/socket';
 
+  const activeUsers = ref([])
   const pendingUsers = ref([])
   const bannedUsers = ref([])
-  const activeUsers = ref([])
 
-  const banQuery = ref('')
-  const unbanQuery = ref('')
+  const activeQuery = ref('')
   const pendingQuery = ref('')
+  const bannedQuery = ref('')
 
   const loading = ref(false)
   const error = ref('')
 
-  const filteredActiveUsers = computed(()=> {
-    const q = banQuery.value.trim().toLowerCase();
-    if(!q) return activeUsers.value;
-    return activeUsers.value.filter(u => u.email.toLowerCase().includes(q));
-  });
+  async function loadAll(silent = true) {
+    if (!silent) loading.value = true;
+    error.value = '';
 
-  const filteredBannedUsers = computed(() => {
-    const q = unbanQuery.value.trim().toLowerCase();
-    if(!q) return bannedUsers.value;
-    return bannedUsers.value.filter(u => u.email.toLowerCase().includes(q));
-  })
+    try {
+      await Promise.all([
+        loadActive(),
+        loadPending(),
+        loadBanned(),
+      ]);
+    } catch (e) {
+      error.value = 'Failed to load users';
+    } finally {
+      if (!silent) loading.value = false;
+    }
+}
 
-  const filteredPendingUsers = computed(() => {
-    const q = pendingQuery.value.trim().toLowerCase();
-    if(!q) return pendingUsers.value;
-    return pendingUsers.value.filter(u => u.email.toLowerCase().includes(q));
-  })
-
-  async function load(silent = true){
-    if(!silent) loading.value = true;
+  async function loadActive(){
     error.value = '';
 
     try{
-      const [pendingRes, bannedRes, activeRes] = await Promise.all([
-        api.get('/admin/users/pending'),
-        api.get('/admin/users/banned'),
-        api.get('/admin/users/active')
-      ])
-
-      pendingUsers.value = pendingRes.data;
-      bannedUsers.value = bannedRes.data;
+      const activeRes = await api.get('/admin/users', {params: {status: 'ACTIVE', q: activeQuery.value}});
       activeUsers.value = activeRes.data;
     } catch(e){
       error.value = 'Failed to load users'
-    } finally{
-      if (!silent) loading.value = false
     }
   }
+
+    async function loadPending(){
+    error.value = '';
+
+    try{
+      const pendingRes = await api.get('/admin/users', {params: {status: 'PENDING', q: pendingQuery.value}});
+      pendingUsers.value = pendingRes.data;
+    } catch(e){
+      error.value = 'Failed to load users'
+    }
+  }
+
+    async function loadBanned(){
+    error.value = '';
+
+    try{
+      const bannedRes = await api.get('/admin/users', {params: {status: 'BANNED', q: bannedQuery.value}});
+      bannedUsers.value = bannedRes.data;
+    } catch(e){
+      error.value = 'Failed to load users'
+    }
+  }
+
 
   async function approve(user){
     try{
@@ -86,12 +98,12 @@
   }
 
   onMounted(() => {
-    socket.on('users:changed', load);
-    load();
+    socket.on('users:changed', loadAll);
+    loadAll(false);
   })
 
   onBeforeUnmount(() => {
-    socket.off('users:changed', load);
+    socket.off('users:changed', loadAll);
   })
 </script>
 
@@ -105,13 +117,14 @@
       <h2>Active users</h2>
 
       <input
-        v-model="banQuery"
+        v-model="activeQuery"
+        @input="loadActive"
         placeholder="Search by email"
         style="margin-bottom: 10px;"
       >
 
-      <p v-if="!activeUsers.length">No active users</p>
-      <p v-else-if="!filteredActiveUsers.length">No matching users</p>
+      <p v-if="!activeUsers.length && activeQuery.trim().length === 0">No active users</p>
+      <p v-else-if="!activeUsers.length && activeQuery.trim().length">No matching users</p>
 
       <table v-else class="admin-table">
         <thead>
@@ -123,7 +136,7 @@
         </thead>
 
         <tbody>
-          <tr v-for="u in filteredActiveUsers.slice(0, 10)" :key="u._id">
+          <tr v-for="u in activeUsers.slice(0, 10)" :key="u._id">
             <td>{{ u.email }}</td>
             <td>{{ u.country || '-'}}</td>
             <td>
@@ -140,13 +153,14 @@
       <h2>Banned users</h2>
 
       <input
-        v-model="unbanQuery"
+        v-model="bannedQuery"
+        @input="loadBanned"
         placeholder="Search by email"
         style="margin-bottom: 10px;"
       />
 
-      <p v-if="!bannedUsers.length">No banned users</p>
-      <p v-else-if="!filteredBannedUsers.length">No matching users</p>
+      <p v-if="!bannedUsers.length && bannedQuery.trim().length === 0">No banned users</p>
+      <p v-else-if="!bannedUsers.length && bannedQuery.trim().length">No matching users</p>
 
       <table v-else class="admin-table">
         <thead>
@@ -158,7 +172,7 @@
         </thead>
 
         <tbody>
-          <tr v-for="u in filteredBannedUsers.slice(0, 10)" :key="u._id">
+          <tr v-for="u in bannedUsers.slice(0, 10)" :key="u._id">
             <td>{{ u.email }}</td>
             <td>{{ u.country || '-'}}</td>
             <td>
@@ -176,12 +190,13 @@
 
       <input
         v-model="pendingQuery"
+        @input="loadPending"
         placeholder="Search by email"
         style="margin-bottom: 10px;"
       >
 
-      <p v-if="!pendingUsers.length">No pending users</p>
-      <p v-else-if="!filteredPendingUsers.length">No matching users</p>
+      <p v-if="!pendingUsers.length && pendingQuery.trim().length === 0">No pending users</p>
+      <p v-else-if="!pendingUsers.length && pendingQuery.trim().length">No matching users</p>
 
       <table v-else class="admin-table">
       <thead>
@@ -193,7 +208,7 @@
       </thead>
 
       <tbody>
-        <tr v-for="u in filteredPendingUsers.slice(0, 10)" :key="u._id">
+        <tr v-for="u in pendingUsers.slice(0, 10)" :key="u._id">
           <td>{{ u.email }}</td>
           <td>{{ u.country || '-'}}</td>
           <td>

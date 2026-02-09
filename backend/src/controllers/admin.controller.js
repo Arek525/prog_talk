@@ -11,27 +11,9 @@ async function getNotifications(req, res){
   }
 }
 
-async function getPendingUsers(req, res) {
-    try {
-        const users = await adminService.listPendingUsers();
-        res.json(users);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-}
-
-async function getBannedUsers(req, res){
+async function getUsers(req, res){
     try{
-        const users = await adminService.listBannedUsers();
-        res.json(users);
-    } catch(err){
-        res.status(400).json({error: err.message})
-    }
-}
-
-async function getActiveUsers(req, res){
-    try{
-        const users = await adminService.listActiveUsers();
+        const users = await adminService.listUsers(req.query.status, req.query.q);
         res.json(users);
     } catch(err){
         res.status(400).json({error: err.message})
@@ -93,14 +75,12 @@ async function hideTopic(req, res) {
 }
 
 module.exports = {
-    getPendingUsers,
-    getBannedUsers,
+    getUsers,
     unbanUser,
     approveUser,
     rejectUser,
     banUser,
     closeTopic,
     hideTopic,
-    getActiveUsers,
     getNotifications
 };
