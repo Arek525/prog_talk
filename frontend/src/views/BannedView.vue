@@ -1,6 +1,8 @@
 <script setup>
+    import { onMounted, onBeforeUnmount } from 'vue';
     import { useAuthStore } from '../stores/auth.store';
     import { useRouter } from 'vue-router'
+    import { socket } from '../services/socket';
 
     const auth = useAuthStore()
     const router = useRouter()
@@ -9,6 +11,17 @@
         await auth.logout()
         router.push('/login')
     }
+
+    onMounted(() => {
+        socket.on('user:unbanned:self', async () => {
+            await auth.fetchMe();
+            if(auth.isActive) router.push('/forum');
+        })
+    })
+
+    onBeforeUnmount(() => {
+        socket.off('user:unbanned:self')
+    })
 </script>
 
 <template>

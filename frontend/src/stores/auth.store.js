@@ -18,7 +18,7 @@ export const useAuthStore = defineStore('auth', {
 
     actions: {
         syncSocket() {
-            if (this.user && this.user.status !== 'BANNED') {
+            if (this.user) {
                 if (!socket.connected) socket.connect()
             } else {
                 if (socket.connected) socket.disconnect()

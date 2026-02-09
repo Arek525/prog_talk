@@ -23,7 +23,6 @@ api.interceptors.response.use(
     const msg = err.response?.data?.message || err.response?.data?.error
     if (err.response?.status === 403 && msg === 'User is banned') {
       auth.user = { status: 'BANNED' }
-      if (socket.connected) socket.disconnect()
       if (!['/login', '/register'].includes(router.currentRoute.value.path)) {
         router.push('/banned')
       }

@@ -20,18 +20,21 @@ function emitAdminsNotificationsChanged() {
 function emitUserApproved(userId) {
     const io = safeGetIO();
     if (io) {
-        io.to(`user:${userId}`).emit('user:approved:self', {
-            message: 'Your account has been approved'
-        });
+        io.to(`user:${userId}`).emit('user:approved:self');
     }
 }
 
 function emitUserRejected(userId) {
     const io = safeGetIO();
     if (io) {
-        io.to(`user:${userId}`).emit('user:rejected:self', {
-            message: 'Your registration has been rejected'
-        });
+        io.to(`user:${userId}`).emit('user:rejected:self');
+    }
+}
+
+function emitUserUnbanned(userId){
+    const io = safeGetIO();
+    if(io){
+        io.to(`user:${userId}`).emit('user:unbanned:self')
     }
 }
 
@@ -133,6 +136,7 @@ async function unbanUser(userId){
     await user.save();
 
     emitAdminsUsersChanged();
+    emitUserUnbanned(userId);
 } 
 
 async function closeTopic(topicId) {

@@ -18,10 +18,6 @@ module.exports = async function socketAuth(socket, next){
         const user = await User.findById(payload.sub);
         if(!user) return next(new Error('Unauthorized'));
 
-        if(user.status === 'BANNED'){
-          return next(new Error('Forbidden'));
-        }
-
         socket.user = user;
         next();   
     } catch(err){
