@@ -46,10 +46,8 @@ async function updateTopic(req, res){
 }
 
 async function getRootTopics(req, res){
-    const page = Math.max(1, Number(req.query.page) || 1);
-    const limit = Math.min(10, Math.max(1, Number(req.query.limit) || 10));
-    const data = await topicService.getRootTopics(req.user, page, limit);
-    res.json(data);
+    const topics = await topicService.getRootTopics(req.user);
+    res.json(topics);
 }
 
 async function getTopic(req, res){

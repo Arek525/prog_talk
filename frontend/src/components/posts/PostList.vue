@@ -62,9 +62,13 @@
         return map;
     })
 
+    function onPostEvent() {
+        load({ silent: true })
+    }
 
-    async function load(silent = true) {
-        if (!silent) loading.value = true;
+
+    async function load({ silent = false } = {}) {
+        if (!silent) loading.value = true
         try {
             const res = await api.get(`/topics/${props.topicId}/posts`, {
                 params: { page: page.value, limit: 10 }
@@ -142,22 +146,21 @@
     }
 
     function subscribe(){
-        socket.on('post:changed', load)
+        socket.on('post:changed', onPostEvent)
     }
 
     function unsubscribe(){
-        socket.off('post:changed', load)
+        socket.off('post:changed', onPostEvent)
     }
 
 
     watch(() => props.topicId, () => {
         page.value = 1;
-        load(false);
-    })
+        load();
+    }, {immediate: true})
 
     onMounted(() => {
-        subscribe();
-        load(false)
+        subscribe()
     })
 
     onBeforeUnmount(() => {
@@ -169,7 +172,7 @@
     <section>
         <p class="section-title">Posts</p>
 
-        <p v-if="loading" class="muted">Loading posts...</p>
+        <p v-if="loading && posts.length === 0" class="muted">Loading posts...</p>
         <p v-if="error" class="error">{{ error }}</p>
 
         <div
