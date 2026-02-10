@@ -12,6 +12,10 @@ function safeGetIO() {
     }
 }
 
+function escapeRegex(text = '') {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function emitForumChanged() {
     const io = safeGetIO();
     if (io) io.to('forum').emit('forum:changed');
@@ -126,14 +130,26 @@ async function updateTopic(userId, topicId, data) {
 }
 
 
-async function getRootTopics(user){
+async function getRootTopics(user, query = '', page = 1, limit = 10){
     const filter = { parentId: null };
 
     if (user.role !== 'ADMIN') {
         filter.isHidden = false;
     }
 
-    return Topic.find(filter);
+    const skip = (page - 1) * limit;
+
+    const q = String(query).trim();
+    if(q){
+        filter.title = {$regex: escapeRegex(q), $options: 'i'}
+    }
+
+    const [topics, total] = await Promise.all([
+        Topic.find(filter).skip(skip).limit(limit).sort({createdAt: -1}),
+        Topic.countDocuments(filter)
+    ]);
+
+    return {items: topics, pages: Math.ceil(total / limit)}
 }
 
 async function getTopic(user, topicId){

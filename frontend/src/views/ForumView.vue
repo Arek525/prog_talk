@@ -14,18 +14,23 @@
     const loading = ref(false);
     const error = ref();
     const topics = ref([]);
+    const page = ref(1);
+    const pages = ref(1);
+    const searchQuery = ref('');
+    const LIMIT = 10;
 
-    async function loadTopics(){
-        loading.value = true;
+    async function loadTopics(silent = true){
+        if(!silent) loading.value = true;
         error.value = '';
 
         try{
-            const res = await api.get('/topics')
-            topics.value = res.data.reverse();
+            const res = await api.get('/topics', {params: {query: searchQuery.value, page: page.value, limit: LIMIT}});
+            topics.value = res.data.items;
+            pages.value = res.data.pages;
         } catch(e){
             error.value = 'Failed to load topics'
         } finally{
-            loading.value = false
+            if(!silent) loading.value = false;
         }
     }
 
@@ -62,7 +67,7 @@
     }
 
     onMounted(() => {
-        loadTopics();
+        loadTopics(false);
         subscribe()
         socket.on('connect', onConnect)
         socket.emit('forum:join')
@@ -90,6 +95,12 @@
         <p v-if="loading" class="muted">Loading topics...</p>
         <p v-if="error" class="error">{{ error }}</p>
 
+        <input
+            placeholder="Search topics by title"
+            v-model="searchQuery"
+            @input="page = 1; loadTopics()"
+        >
+
         <div v-if="topics.length" class="card">
             <ul class="list">
                 <li
@@ -116,6 +127,16 @@
                     </div>
                 </li>
             </ul>
+            <div v-if="pages > 1">
+                <button 
+                    v-for="n in pages"
+                    :key="n"
+                    @click="page = n; loadTopics()"
+                    :disabled="n === page"
+                >
+                    {{ n }}
+                </button>
+            </div>
         </div>
 
         <p v-else class="muted">No topics yet</p>

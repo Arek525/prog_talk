@@ -46,7 +46,7 @@ async function updateTopic(req, res){
 }
 
 async function getRootTopics(req, res){
-    const topics = await topicService.getRootTopics(req.user);
+    const topics = await topicService.getRootTopics(req.user, req.query.query, req.query.page, req.query.limit);
     res.json(topics);
 }
 
