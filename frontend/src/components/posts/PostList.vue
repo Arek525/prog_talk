@@ -31,6 +31,7 @@
         blocks.forEach((el) => hljs.highlightElement(el));
     }
 
+    
     const auth = useAuthStore();
 
     const loading = ref(false);
@@ -41,6 +42,16 @@
     const posts = ref([]);
     const page = ref(1);
     const pages = ref(1);
+    function pageKey() {
+        return `topic:lastPage:${props.topicId}`;
+    }
+
+    function goToPage(n) {
+        page.value = n;
+        localStorage.setItem(pageKey(), String(n));
+        load();
+    }
+
 
     const activeReplyTo = ref(null);
     const replyContent = ref('');
@@ -155,7 +166,7 @@
 
 
     watch(() => props.topicId, () => {
-        page.value = 1;
+        page.value = Number(localStorage.getItem(pageKey()) || 1);
         load();
     }, {immediate: true})
 
@@ -259,7 +270,7 @@
                 v-for="n in pages"
                 :key="n"
                 class="ghost"
-                @click="page = n; load()"
+                @click="goToPage(n)"
                 :disabled="page === n"
             >
                 {{ n }}
