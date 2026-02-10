@@ -24,28 +24,52 @@ The backend uses `backend/.env` (loaded by `docker-compose.yml`). Required varia
 - `JWT_SECRET`
 - `JWT_EXPIRES_IN`
 
-## TLS/SSL certificates (required)
-Nginx expects your own certificates. Place them in `nginx/certs/` with these names:
-- `progtalk.crt`
-- `progtalk.key`
+## HTTPS certificates (local development)
 
-Example self-signed cert for local dev:
-```
-mkdir -p nginx/certs
-openssl req -x509 -newkey rsa:2048 -nodes \
-  -keyout nginx/certs/progtalk.key \
-  -out nginx/certs/progtalk.crt \
-  -days 365 \
-  -subj "/CN=localhost"
+This project uses **mkcert** for local trusted HTTPS certificates.
+
+### 1) Install mkcert (Linux)
+```bash
+sudo apt update
+sudo apt install -y mkcert libnss3-tools
+mkcert -install
 ```
 
-For production, use a trusted CA certificate.
+### 2) Generate/update certs and reload nginx
+From project root:
+```bash
+chmod +x nginx/refresh-cert.sh
+./nginx/refresh-cert.sh
+```
+
+What this script does:
+- detects current host LAN IP,
+- generates certs for: `localhost`, `127.0.0.1`, `::1`, and current LAN IP,
+- writes files to:
+  - `nginx/certs/progtalk.crt`
+  - `nginx/certs/progtalk.key`
+- rebuilds/restarts nginx (`docker compose up -d --build nginx`).
+
+### 3) Access
+- local machine: `https://localhost`
+- another device in same network: `https://<your_current_lan_ip>`
+
+### 4) Important when changing network
+If your LAN IP changes (new Wi-Fi, hotspot, etc.), run again:
+```bash
+./nginx/refresh-cert.sh
+```
 
 ## Quick start (Docker)
-Create `backend/.env`.
-Add TLS certs (see section above).
-Run:
+1. Create `backend/.env`.
+2. Prepare HTTPS certs:
+```bash
+chmod +x nginx/refresh-cert.sh
+./nginx/refresh-cert.sh
 ```
+3. Start stack:
+```bash
 docker compose up --build
 ```
+
 App will be available at `https://localhost`.
