@@ -16,7 +16,6 @@ const postRoutes = require('./routes/post.routes');
 const adminRoutes = require('./routes/admin.routes');
 const userRoutes = require('./routes/user.routes');
 
-
 app.use('/api/auth', authRoutes);
 app.use('/api/topics', topicRoutes);
 app.use('/api', moderatorRoutes);
